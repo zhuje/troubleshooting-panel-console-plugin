@@ -1,0 +1,7 @@
+.DS_Store
+integration-tests/screenshots
+integration-tests/videos
+integration-tests/.DS_Store
+dist/
+node_modules/
+yarn-error.log
