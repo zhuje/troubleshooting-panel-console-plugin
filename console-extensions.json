@@ -1,0 +1,20 @@
+[
+  {
+    "type": "console.page/route",
+    "properties": {
+      "exact": true,
+      "path": "/observe/korrel8r",
+      "component": { "$codeRef": "Korrel8rPage" }
+    }
+  },
+  {
+    "type": "console.navigation/href",
+    "properties": {
+      "id": "troubleshooting-panel",
+      "name": "%plugin__troubleshooting-panel-console-plugin~Korrel8r%",
+      "href": "/observe/korrel8r",
+      "perspective": "admin",
+      "section": "observe"
+    }
+  }
+]
