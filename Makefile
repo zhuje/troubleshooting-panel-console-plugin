@@ -25,3 +25,7 @@ start-frontend:
 .PHONY: build-image
 build-image:
 	./scripts/build-image.sh
+
+.PHONY: start-forward
+start-forward:
+	./scripts/start-forward.sh

@@ -1,0 +1,28 @@
+.tp-plugin__panel-query-container {
+  padding: var(--pf-v5-global--spacer--md);
+  border: solid var(--pf-v5-global--BorderColor--100) var(--pf-v5-global--BorderWidth--sm);
+  border-top: 0;
+  border-right: 0
+}
+
+.tp-plugin__panel-topology-container {
+  border-left: var(--pf-v5-global--BorderWidth--sm) var(--pf-v5-global--BorderColor--100) solid;
+  position: relative;
+}
+
+.tp-plugin__panel-query-input {
+  margin: var(--pf-v5-global--spacer--sm) 0 var(--pf-v5-global--spacer--md) 0;
+}
+
+.tp-plugin__panel-topology-info {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 100;
+  background-color: transparent;
+}

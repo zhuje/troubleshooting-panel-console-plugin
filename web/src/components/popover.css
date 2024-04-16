@@ -1,0 +1,30 @@
+.tp-plugin__popover {
+  position: fixed;
+  top: 0;
+  right: 0;
+  z-index: 98;
+  bottom: 0;
+  overflow: hidden;
+  background-color: var(--pf-v5-global--BackgroundColor--100);
+  height: 100%;
+  width: 35%;
+}
+
+.tp-plugin__popover-close {
+  float: right;
+  height: 1rem;
+  margin-left: var(--pf-v5-global--spacer--md);
+  right: var(--pf-v5-global--spacer--sm);
+  top: var(--pf-v5-global--spacer--sm);
+  width: 1rem;
+}
+
+.tp-plugin__popover-title-bar {
+  padding: var(--pf-v5-global--spacer--sm) var(--pf-v5-global--spacer--md);
+  border-bottom: var(--pf-v5-global--BorderWidth--sm) var(--pf-v5-global--BorderColor--100) solid;
+}
+
+.tp-plugin__popover-content {
+  padding-left: var(--pf-v5-global--spacer--sm);
+  border-left: 0.5px var(--pf-v5-global--BorderColor--100) solid;
+}
