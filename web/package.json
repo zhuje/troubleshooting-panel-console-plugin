@@ -6,10 +6,10 @@
   "license": "Apache-2.0",
   "scripts": {
     "clean": "rm -rf dist",
-    "build": "yarn clean && NODE_ENV=production yarn ts-node node_modules/.bin/webpack",
-    "build-dev": "yarn clean && yarn ts-node node_modules/.bin/webpack",
-    "start": "yarn ts-node node_modules/.bin/webpack serve",
-    "start-console": "./start-console.sh",
+    "build": "npm run && NODE_ENV=production npm run ts-node node_modules/.bin/webpack",
+    "build-dev": "npm run clean && npm run ts-node node_modules/.bin/webpack",
+    "start": "npm run ts-node node_modules/.bin/webpack serve",
+    "start-console": "../scripts/start-console.sh",
     "i18n": "./i18n-scripts/build-i18n.sh && node ./i18n-scripts/set-english-defaults.js",
     "ts-node": "ts-node -O '{\"module\":\"commonjs\"}'",
     "lint": "eslint ./src ./integration-tests --fix &&  stylelint \"src/**/*.css\" --allow-empty-input --fix"
