@@ -8,6 +8,8 @@ CONSOLE_IMAGE_PLATFORM=${CONSOLE_IMAGE_PLATFORM:="linux/amd64"}
 
 echo "Starting local OpenShift console..."
 
+npm_package_consolePlugin_name="troubleshooting-panel-console-plugin"
+
 BRIDGE_USER_AUTH="disabled"
 BRIDGE_K8S_MODE="off-cluster"
 BRIDGE_K8S_AUTH="bearer-token"
