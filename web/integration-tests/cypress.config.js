@@ -21,6 +21,6 @@ module.exports = defineConfig({
       return require('./plugins/index.ts')(on, config);
     },
     specPattern: 'tests/**/*.cy.{js,jsx,ts,tsx}',
-    supportFile: 'support/index.ts',
+    supportFile: false,
   },
 });
