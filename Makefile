@@ -16,11 +16,11 @@ build-frontend:
 
 .PHONY: start-console
 start-console:
-	cd web && ./scripts/start-console.sh
+	./scripts/start-console.sh
 
 .PHONY: start-frontend
 start-frontend: 
-	cd web && npm run dev
+	cd web && npm run start
 
 .PHONY: build-image
 build-image:
