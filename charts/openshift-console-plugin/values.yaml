@@ -1,10 +1,10 @@
 ---
 plugin:
-  name: ""
-  description: ""
-  image: ""
+  name: troubleshooting-panel-console-plugin
+  description: Troubleshooting Panel Plugin
+  image: quay.io/openshift-observability-ui/troubleshooting-panel-console-plugin:latest
   imagePullPolicy: IfNotPresent
-  replicas: 2
+  replicas: 1
   port: 9443
   securityContext:
     enabled: true
@@ -24,7 +24,8 @@ plugin:
       cpu: 10m
       memory: 50Mi
   basePath: /
-  certificateSecretName: ""
+  certificateSecretName: plugin-serving-cert
+  pluginConfigName: troubleshooting-panel-console-plugin-config
   serviceAccount:
     create: true
     annotations: {}

@@ -11,7 +11,7 @@ metadata:
     {{- include "openshift-console-plugin.labels" . | nindent 4 }}
 spec:
   ports:
-    - name: {{ .Values.plugin.port }}-tcp
+    - name: "{{ .Values.plugin.port }}-tcp"
       protocol: TCP
       port: {{ .Values.plugin.port }}
       targetPort: {{ .Values.plugin.port }}

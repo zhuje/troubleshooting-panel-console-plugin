@@ -62,17 +62,30 @@ helm upgrade -i troubleshooting-panel-console-plugin charts/openshift-console-pl
 > and we are following the same convention so that the plugins can be run together.
 
 #### TP (Troubleshooting Panel) Development Server
+The development server of the troubleshooting panel can either be ran as a nodejs server to get hot reloading of the frontend or a go server to serve the files as they will be in production.
+##### Javascript Development Server
 In one terminal window, run:
+1. `cd web`
 1. `npm install`
 2. `npm run start`
 The plugin HTTP server runs on port 9002 with CORS enabled.
+##### Go Server
+In one terminal window, run:
+1. `cd web`
+2. `npm install`
+3. `npm run build`
+4. `cd ../cmd`
+5. `go run ./cmd/plugin-backend.go -port='9002' -config-path='./web/dist' -static-path='./web/dist'`
+Or for hot reloading of the go backend you can use [gow](https://github.com/mitranim/gow)
+5. `gow run ./cmd/plugin-backend.go -port='9002' -config-path='./web/dist' -static-path='./web/dist'`
+Gow will restart when any changes are saved to go files in any subdirectories.
 
 #### Monitoring Plugin Development Server
 In another terminal window:
 Clone https://github.com/openshift/monitoring-plugin into a new directory.
 Then run:
-1. `npm install`
-2. `npm run start`
+1. `yarn install`
+2. `yarn run start`
 The plugin HTTP server runs on port 9001 with CORS enabled.
 
 #### Connect to Korrel8r

@@ -6,25 +6,40 @@ install-frontend:
 install-frontend-ci:
 	cd web && npm ci
 
-.PHONY: lint-frontend
-lint-frontend:
-	cd web && npm run lint
+.PHONY: install-frontend-ci-clean
+install-frontend-ci-clean: install-frontend-ci
+	cd web && npm cache clean --force
 
 .PHONY: build-frontend
 build-frontend:
 	cd web && npm run build
 
+.PHONY: start-frontend
+start-frontend:
+	cd web && npm run start
+
 .PHONY: start-console
 start-console:
 	./scripts/start-console.sh
 
-.PHONY: start-frontend
-start-frontend: 
-	cd web && npm run start
+.PHONY: lint-frontend
+lint-frontend:
+	cd web && npm run lint
+
+.PHONY: build-backend
+build-backend:
+	go build -o plugin-backend cmd/plugin-backend.go
+
+.PHONY: start-backend
+start-backend:
+	go run ./cmd/plugin-backend.go
 
 .PHONY: build-image
 build-image:
 	./scripts/build-image.sh
+
+.PHONY: install
+install: install-frontend install-backend
 
 .PHONY: start-forward
 start-forward:
