@@ -28,11 +28,7 @@ type Config struct {
 }
 
 type PluginConfig struct {
-	UseTenantInHeader               bool          `json:"useTenantInHeader,omitempty" yaml:"useTenantInHeader,omitempty"`
-	IsStreamingEnabledInDefaultPage bool          `json:"isStreamingEnabledInDefaultPage,omitempty" yaml:"isStreamingEnabledInDefaultPage,omitempty"`
-	LokiTenanLabelKey               string        `json:"lokiTenanLabelKey,omitempty" yaml:"lokiTenanLabelKey,omitempty"`
-	Timeout                         time.Duration `json:"timeout,omitempty" yaml:"timeout,omitempty"`
-	LogsLimit                       int           `json:"logsLimit,omitempty" yaml:"logsLimit,omitempty"`
+	Timeout time.Duration `json:"timeout,omitempty" yaml:"timeout,omitempty"`
 }
 
 func (pluginConfig *PluginConfig) MarshalJSON() ([]byte, error) {

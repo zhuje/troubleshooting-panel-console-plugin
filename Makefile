@@ -11,7 +11,7 @@ install-frontend-ci-clean: install-frontend-ci
 	cd web && npm cache clean --force
 
 .PHONY: build-frontend
-build-frontend:
+build-frontend: install-frontend-ci-clean
 	cd web && npm run build
 
 .PHONY: start-frontend
@@ -32,14 +32,11 @@ build-backend:
 
 .PHONY: start-backend
 start-backend:
-	go run ./cmd/plugin-backend.go
+	go run ./cmd/plugin-backend.go -port='9002' -config-path='./web/dist' -static-path='./web/dist' -plugin-config-path='ct.yaml'
 
 .PHONY: build-image
 build-image:
 	./scripts/build-image.sh
-
-.PHONY: install
-install: install-frontend install-backend
 
 .PHONY: start-forward
 start-forward:

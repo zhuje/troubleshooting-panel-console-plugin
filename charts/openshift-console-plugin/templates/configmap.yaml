@@ -7,5 +7,4 @@ metadata:
     {{- include "openshift-console-plugin.labels" . | nindent 4 }}
 data:
   config.yaml: |-
-    logsLimit: 100
     timeout: "30s"
