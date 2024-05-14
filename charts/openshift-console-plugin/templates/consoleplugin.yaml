@@ -7,8 +7,6 @@ metadata:
     {{- include "openshift-console-plugin.labels" . | nindent 4 }}
 spec:
   displayName: {{ default (printf "%s Plugin" (include "openshift-console-plugin.name" .)) .Values.plugin.description }}
-  i18n: 
-    loadType: Preload
   backend:
     type: Service
     service:
@@ -16,3 +14,11 @@ spec:
       namespace: {{ .Release.Namespace }}
       port: {{ .Values.plugin.port }}
       basePath: {{ .Values.plugin.basePath }}
+  proxy:
+  - alias: korrel8r
+    endpoint:
+      type: Service
+      service:
+        name: korrel8r
+        namespace: korrel8r
+        port: 8443

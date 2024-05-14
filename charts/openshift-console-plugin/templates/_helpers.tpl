@@ -43,6 +43,13 @@ Create the name secret containing the certificate
 {{- end }}
 
 {{/*
+Create the name secret containing the certificate
+*/}}
+{{- define "openshift-console-plugin.pluginConfigName" -}}
+{{ default (printf "%s-cert" (include "openshift-console-plugin.name" .)) .Values.plugin.pluginConfigName }}
+{{- end }}
+
+{{/*
 Create the name of the service account to use
 */}}
 {{- define "openshift-console-plugin.serviceAccountName" -}}

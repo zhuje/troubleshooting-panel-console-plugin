@@ -2,7 +2,7 @@
   "name": "troubleshooting-panel-console-plugin",
   "version": "0.0.1",
   "private": true,
-  "repository": "git@github.com:peteryurkovich/troubleshooting-panel-console-plugin",
+  "repository": "git@github.com:openshift/troubleshooting-panel-console-plugin",
   "license": "Apache-2.0",
   "scripts": {
     "clean": "rm -rf dist",

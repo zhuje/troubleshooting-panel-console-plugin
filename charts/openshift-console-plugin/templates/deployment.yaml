@@ -19,37 +19,41 @@ spec:
       containers:
         - name: {{ template "openshift-console-plugin.name" . }}
           image: {{ required "Plugin image must be specified!" .Values.plugin.image }}
+          args:
+            - "-port={{ .Values.plugin.port }}"
+            - "-cert=/var/serving-cert/tls.crt"
+            - "-key=/var/serving-cert/tls.key"
+            - "-plugin-config-path=/etc/plugin/config.yaml"
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
           ports:
             - containerPort: {{ .Values.plugin.port }}
               protocol: TCP
-          imagePullPolicy: {{ .Values.plugin.imagePullPolicy }}
-          {{- if and (.Values.plugin.securityContext.enabled) (.Values.plugin.containerSecurityContext) }}
-          securityContext: {{ tpl (toYaml (omit .Values.plugin.containerSecurityContext "enabled")) $ | nindent 12 }}
-          {{- end }}
+          imagePullPolicy: Always
           resources:
             {{- toYaml .Values.plugin.resources | nindent 12 }}
           volumeMounts:
             - name: {{ template "openshift-console-plugin.certificateSecret" . }}
               readOnly: true
-              mountPath: /var/cert
-            - name: nginx-conf
-              readOnly: true
-              mountPath: /etc/nginx/nginx.conf
-              subPath: nginx.conf
+              mountPath: /var/serving-cert
       volumes:
         - name: {{ template "openshift-console-plugin.certificateSecret" . }}
           secret:
             secretName: {{ template "openshift-console-plugin.certificateSecret" . }}
             defaultMode: 420
-        - name: nginx-conf
+        - name: plugin-conf
           configMap:
-            name: {{ template "openshift-console-plugin.name" . }}
+            name: {{ template "openshift-console-plugin.pluginConfigName" . }}
             defaultMode: 420
       restartPolicy: Always
       dnsPolicy: ClusterFirst
-      {{- if and (.Values.plugin.securityContext.enabled) (.Values.plugin.podSecurityContext) }}
-      securityContext: {{ tpl (toYaml (omit .Values.plugin.podSecurityContext "enabled")) $ | nindent 8 }}
-      {{- end }}
+      securityContext:
+        runAsNonRoot: true
+        seccompProfile:
+          type: RuntimeDefault
   strategy:
     type: RollingUpdate
     rollingUpdate:

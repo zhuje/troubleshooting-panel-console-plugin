@@ -49,57 +49,80 @@ helm upgrade -i troubleshooting-panel-console-plugin charts/openshift-console-pl
 
 ## Development
 
-### Dependencies 
-1. [npm](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm)
-2. [oc](https://mirror.openshift.com/pub/openshift-v4/clients/oc/4.4/) 
-3. [podman 3.2.0+](https://podman.io) or [Docker](https://www.docker.com) 
-4. An OpenShift cluster
-5. [Korrel8r](https://korrel8r.github.io/korrel8r) instance running in the cluster. Assumed to be running v0.0.8
+### Dependencies
 
->[!WARNING]
-> The Korrel8r instructions state that the default instance should be in the namespace `korrel8r`
-> With the name `korrel8r-instance`. However, the logging plugin expects the name to be `korrel8r` 
-> and we are following the same convention so that the plugins can be run together.
+1. [npm](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm)
+2. [oc](https://mirror.openshift.com/pub/openshift-v4/clients/oc/4.4/)
+3. [podman 3.2.0+](https://podman.io) or [Docker](https://www.docker.com)
+4. An OpenShift cluster
+5. [Korrel8r](https://korrel8r.github.io/korrel8r) instance running in the cluster.
 
 #### TP (Troubleshooting Panel) Development Server
+
+The development server of the troubleshooting panel can either be ran as a nodejs server to get hot reloading of the frontend or a go server to serve the files as they will be in production.
+
+##### Javascript Development Server
+
 In one terminal window, run:
-1. `npm install`
-2. `npm run start`
-The plugin HTTP server runs on port 9002 with CORS enabled.
+
+1. `make install`
+2. `make start-frontend`
+   The plugin HTTP server runs on port 9002 with CORS enabled.
+
+##### Go Server
+
+In one terminal window, run:
+
+1. `make build-frontend`
+2. `make start-backend`
+   Or for hot reloading of the go backend you can use [gow](https://github.com/mitranim/gow)
+3. `gow run ./cmd/plugin-backend.go -port='9002' -config-path='./web/dist' -static-path='./web/dist'`
+   Gow will restart when any changes are saved to go files in any subdirectories.
 
 #### Monitoring Plugin Development Server
+
 In another terminal window:
 Clone https://github.com/openshift/monitoring-plugin into a new directory.
 Then run:
-1. `npm install`
-2. `npm run start`
-The plugin HTTP server runs on port 9001 with CORS enabled.
+
+1. `yarn install`
+2. `yarn run start`
+   The plugin HTTP server runs on port 9001 with CORS enabled.
 
 #### Connect to Korrel8r
+
 ##### Setting up Korrel8r
+
 The following steps are suggested for setting up Korrel8r within your cluster to test the plugin. These steps are accurate as of the time of writing, and both Korrel8r and this plugin are subject to change.
+
 1. Clone the [korrel8r](https://github.com/korrel8r/korrel8r) repository into a new directory.
 2. cd into `/hack/openshift`
 3. Run `make operators`
 4. Run `make resources`
 5. Install the **korrel8r** operator into your cluster
 6. Create a `korrel8r` namespace in your cluster
-  a. If installing in 4.15 or later, there is a permission issue which can be tracked here: https://issues.redhat.com/browse/OU-304. To solve this follow the instructions detailed in the [docs](https://korrel8r.github.io/korrel8r/#troubleshooting-ocp-415-errors)
+   a. If installing in 4.15 or later, there is a permission issue which can be tracked here: https://issues.redhat.com/browse/OU-304. To solve this follow the instructions detailed in the [docs](https://korrel8r.github.io/korrel8r/#troubleshooting-ocp-415-errors)
+
 ```bash
 kubectl label ns/korrel8r pod-security.kubernetes.io/enforce=privileged --overwrite
 kubectl label ns/korrel8r pod-security.kubernetes.io/warn=privileged --overwrite
 ```
+
 7. Create a korrel8r instance in the `korrel8r` namespace with the name `korrel8r`
 8. Follow the instructions [here](https://korrel8r.github.io/korrel8r/#troubleshooting-no-related-logs) to create a failing deployment to create alerts which link to other items using korrel8r
 
 ##### Port Forward to Korrel8r
+
 In order to test the plugin with the Korrel8r data, you need to port forward to the korrel8r pod.
 In a another terminal window, run:
-1. `npm run start-forward`
-The port forward runs on port localhost:9005 and forwards to the korrel8r pod
+
+1. `make start-forward`
+   The port forward runs on port localhost:9005 and forwards to the korrel8r pod. Defaults to a name of korrel8r in the namespace of korrel8r, but KORREL8R_NAME and KORREL8R_NAMESPACE variables can be set to adjust the location.
 
 #### Console Development Server
+
 In another terminal window, run:
+
 1. `oc login` (requires [oc](https://console.redhat.com/openshift/downloads) and an [OpenShift cluster](https://console.redhat.com/openshift/create))
 2. `npm run start-console` (requires [Docker](https://www.docker.com) or [podman 3.2.0+](https://podman.io))
 
@@ -126,8 +149,8 @@ You can use the `useTranslation` hook with the `plugin__troubleshooting-panel-co
 
 ```tsx
 const Header: React.FC = () => {
-  const { t } = useTranslation('plugin__troubleshooting-panel-console-plugin');
-  return <h1>{t('Hello, World!')}</h1>;
+  const { t } = useTranslation("plugin__troubleshooting-panel-console-plugin");
+  return <h1>{t("Hello, World!")}</h1>;
 };
 ```
 
@@ -137,16 +160,16 @@ the message for the current language from the `plugin__troubleshooting-panel-con
 namespace. For example:
 
 ```json
-  {
-    "type": "console.navigation/href",
-    "properties": {
-      "id": "troubleshooting-panel",
-      "name": "%plugin__troubleshooting-panel-console-plugin~Korrel8r%",
-      "href": "/observe/korrel8r",
-      "perspective": "admin",
-      "section": "observe"
-    }
+{
+  "type": "console.navigation/href",
+  "properties": {
+    "id": "troubleshooting-panel",
+    "name": "%plugin__troubleshooting-panel-console-plugin~Korrel8r%",
+    "href": "/observe/korrel8r",
+    "perspective": "admin",
+    "section": "observe"
   }
+}
 ```
 
 Running `npm run i18n` updates the JSON files in the `locales` folder of the
