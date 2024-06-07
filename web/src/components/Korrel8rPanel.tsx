@@ -29,7 +29,7 @@ interface Korrel8rPanelProps {
 }
 
 export default function Korrel8rPanel({ initialQueryString }: Korrel8rPanelProps) {
-  const [queryString, setQueryString] = React.useState(initialQueryString);
+  const [queryInputField, setQueryInputField] = React.useState(initialQueryString);
   const [errorMessage, setErrorMessage] = React.useState('');
   const [errorMessageTitle, setErrorMessageTitle] = React.useState('');
   const [isLoading, , setLoadingTrue, setLoadingFalse] = useBoolean(false);
@@ -38,21 +38,21 @@ export default function Korrel8rPanel({ initialQueryString }: Korrel8rPanelProps
   const loggingAvailable = usePluginAvailable('logging-view-plugin');
 
   const dispatch = useDispatch();
-  const query: string = useSelector((state: State) => state.plugins?.tp?.get('query'));
+  const savedQuery: string = useSelector((state: State) => state.plugins?.tp?.get('query'));
   const queryResponse: Korrel8rGraphNeighboursResponse = useSelector((state: State) =>
     state.plugins?.tp?.get('queryResponse'),
   );
 
-  if (!query && queryString) {
-    dispatch(setQuery(queryString));
+  if (!savedQuery && queryInputField) {
+    dispatch(setQuery(queryInputField));
   }
 
   React.useEffect(() => {
-    if (!query) {
+    if (!savedQuery) {
       return;
     }
     setLoadingTrue();
-    const { request, abort } = getNeighborsGraph({ query });
+    const { request, abort } = getNeighborsGraph({ query: savedQuery });
     request()
       .then((response) => {
         let existingNodes = response.nodes.filter((node) => {
@@ -103,7 +103,15 @@ export default function Korrel8rPanel({ initialQueryString }: Korrel8rPanelProps
     return () => {
       abort();
     };
-  }, [query, dispatch, setLoadingFalse, setLoadingTrue, loggingAvailable, netobserveAvailable, t]);
+  }, [
+    savedQuery,
+    dispatch,
+    setLoadingFalse,
+    setLoadingTrue,
+    loggingAvailable,
+    netobserveAvailable,
+    t,
+  ]);
 
   return (
     <>
@@ -114,16 +122,18 @@ export default function Korrel8rPanel({ initialQueryString }: Korrel8rPanelProps
             type="text"
             id="queryString"
             name="queryString"
-            value={queryString}
+            value={queryInputField}
             autoResize
-            onChange={(_event, value) => setQueryString(value)}
+            onChange={(_event, value) => setQueryInputField(value)}
           />
         </TextInputGroup>
         <Button
-          isAriaDisabled={!queryString}
+          isAriaDisabled={!queryInputField}
           onClick={() => {
-            dispatch(setQueryResponse({ nodes: [], edges: [] }));
-            dispatch(setQuery(queryString));
+            if (queryInputField !== savedQuery) {
+              dispatch(setQueryResponse({ nodes: [], edges: [] }));
+              dispatch(setQuery(queryInputField));
+            }
           }}
         >
           Query
