@@ -50,11 +50,6 @@ export default function Korrel8rPanel({ initialQueryString }: Korrel8rPanelProps
     dispatch(setQuery(queryInputField));
   }
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const preventQuery = () => {
-    return !savedQuery || netobserveAvailableLoading || loggingAvailableLoading;
-  };
-
   const handleError = React.useCallback(
     (error) => {
       // eslint-disable-next-line no-console
@@ -73,15 +68,8 @@ export default function Korrel8rPanel({ initialQueryString }: Korrel8rPanelProps
     [setLoadingFalse, setErrorMessageTitle, setErrorMessage, t],
   );
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  const clearError = () => {
-    setErrorMessage('');
-    setErrorMessageTitle('');
-    setLoadingFalse();
-  };
-
   React.useEffect(() => {
-    if (preventQuery) {
+    if (!savedQuery || netobserveAvailableLoading || loggingAvailableLoading) {
       return;
     }
     setLoadingTrue();
@@ -101,7 +89,9 @@ export default function Korrel8rPanel({ initialQueryString }: Korrel8rPanelProps
           }),
         );
 
-        clearError();
+        setErrorMessage('');
+        setErrorMessageTitle('');
+        setLoadingFalse();
       })
       .catch((error) => {
         handleError(error);
@@ -115,10 +105,12 @@ export default function Korrel8rPanel({ initialQueryString }: Korrel8rPanelProps
     setLoadingFalse,
     setLoadingTrue,
     handleError,
-    preventQuery,
-    clearError,
     netobserveAvailable,
     loggingAvailable,
+    setErrorMessage,
+    setErrorMessageTitle,
+    loggingAvailableLoading,
+    netobserveAvailableLoading,
   ]);
 
   return (
