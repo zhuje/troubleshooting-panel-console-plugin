@@ -30,14 +30,6 @@ const reducer = (state: TPState, action: TPAction): TPState => {
     case ActionType.OpenTP:
       return state.set('isOpen', true);
 
-    case ActionType.SetQuery:
-      return state.set('query', action.payload.query);
-    case ActionType.SetQueryResponse:
-      return state.set('queryResponse', {
-        nodes: [...action.payload.queryResponse.nodes],
-        edges: [...action.payload.queryResponse.edges],
-      });
-
     default:
       break;
   }

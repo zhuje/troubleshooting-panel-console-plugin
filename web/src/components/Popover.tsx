@@ -5,10 +5,10 @@ import { useDispatch, useSelector } from 'react-redux';
 import { Button, Title, Flex, FlexItem } from '@patternfly/react-core';
 import { TimesCircleIcon } from '@patternfly/react-icons';
 import { State } from '../redux-reducers';
-import { closeTP, setQuery, setQueryResponse } from '../redux-actions';
+import { closeTP } from '../redux-actions';
 import { useTranslation } from 'react-i18next';
 
-export default function Popover(props: { queryString: string }) {
+export default function Popover() {
   const dispatch = useDispatch();
   const { t } = useTranslation('plugin__troubleshooting-panel-console-plugin');
 
@@ -16,8 +16,6 @@ export default function Popover(props: { queryString: string }) {
 
   const close = React.useCallback(() => {
     dispatch(closeTP());
-    dispatch(setQuery(''));
-    dispatch(setQueryResponse({ nodes: [], edges: [] }));
   }, [dispatch]);
 
   if (!isOpen) {
@@ -47,7 +45,7 @@ export default function Popover(props: { queryString: string }) {
           grow={{ default: 'grow' }}
           gap={{ default: 'gapNone' }}
         >
-          <Korrel8rPanel initialQueryString={props.queryString} />
+          <Korrel8rPanel />
         </Flex>
       </Flex>
     </>
