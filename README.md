@@ -67,7 +67,7 @@ The development server of the troubleshooting panel can either be ran as a nodej
 
 In one terminal window, run:
 
-1. `make install`
+1. `make install-frontend`
 2. `make start-frontend`
    The plugin HTTP server runs on port 9002 with CORS enabled.
 

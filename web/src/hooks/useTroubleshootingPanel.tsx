@@ -26,40 +26,37 @@ const useTroubleshootingPanel: ExtensionHook<Array<Action>> = () => {
     dispatch(openTP());
   }, [dispatch]);
 
-  const getActions = React.useCallback(
-    (queryString = '') => {
-      if (!isKorrel8rReachable || perspective === 'dev') {
-        return [];
-      }
-      const actions = [
-        {
-          id: 'open-troubleshooting-panel',
-          label: (
-            <div title={t('Open the Troubleshooting Panel')}>
-              <InfrastructureIcon /> {t('Troubleshooting Panel')}
-            </div>
-          ),
-          description: t('Open the Troubleshooting Panel'),
-          cta: () => {
-            if (!isLaunched && launchModal) {
-              launchModal?.(Popover, { queryString });
-              setLaunched();
-            }
-            open();
-          },
-          disabled: false,
-          tooltip: t('Open the Troubleshooting Panel'),
+  const getActions = React.useCallback(() => {
+    if (!isKorrel8rReachable || perspective === 'dev') {
+      return [];
+    }
+    const actions = [
+      {
+        id: 'open-troubleshooting-panel',
+        label: (
+          <div title={t('Open the Troubleshooting Panel')}>
+            <InfrastructureIcon /> {t('Troubleshooting Panel')}
+          </div>
+        ),
+        description: t('Open the Troubleshooting Panel'),
+        cta: () => {
+          if (!isLaunched && launchModal) {
+            launchModal?.(Popover, {});
+            setLaunched();
+          }
+          open();
         },
-      ];
-      return actions;
-    },
-    [isLaunched, launchModal, open, setLaunched, t, isKorrel8rReachable, perspective],
-  );
+        disabled: false,
+        tooltip: t('Open the Troubleshooting Panel'),
+      },
+    ];
+    return actions;
+  }, [isLaunched, launchModal, open, setLaunched, t, isKorrel8rReachable, perspective]);
 
   const [actions, setActions] = React.useState<Array<Action>>(getActions());
 
   React.useEffect(() => {
-    setActions(getActions(korrel8rQueryFromURL));
+    setActions(getActions());
   }, [korrel8rQueryFromURL, isLaunched, launchModal, open, setLaunched, getActions]);
 
   return [actions, true, null];
