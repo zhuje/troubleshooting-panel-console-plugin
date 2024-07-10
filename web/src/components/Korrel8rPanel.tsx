@@ -4,6 +4,7 @@ import {
   TextArea,
   TextInputGroup,
   Title,
+  Tooltip,
   FlexItem,
   EmptyStateHeader,
   EmptyState,
@@ -57,7 +58,18 @@ export default function Korrel8rPanel() {
   return (
     <>
       <FlexItem className="tp-plugin__panel-query-container">
-        <Title headingLevel="h2">{t('Correlation Signals')}</Title>
+        <Title headingLevel="h2">{t('Correlated Signals')}</Title>
+        <Tooltip content="Focus on the current console page.">
+          <Button
+            isAriaDisabled={!korrel8rQueryFromURL}
+            onClick={() => {
+              setQuery(korrel8rQueryFromURL);
+              setResult(null);
+            }}
+          >
+            Focus
+          </Button>
+        </Tooltip>
         <TextInputGroup className="tp-plugin__panel-query-input">
           <TextArea
             type="text"
