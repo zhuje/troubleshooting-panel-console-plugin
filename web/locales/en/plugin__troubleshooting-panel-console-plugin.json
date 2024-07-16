@@ -1,10 +1,20 @@
 {
-  "Correlated Signals": "Correlated Signals",
+  "Correlation result was empty.": "Correlation result was empty.",
   "Error Loading Data": "Error Loading Data",
+  "Find related resources.": "Find related resources.",
+  "Focus": "Focus",
+  "Goal class: ": "Goal class: ",
+  "Hide Query": "Hide Query",
+  "Korrel8 query selecting the starting points for correlation.": "Korrel8 query selecting the starting points for correlation.",
   "Korrel8r Error": "Korrel8r Error",
+  "Neighbourhood depth: ": "Neighbourhood depth: ",
   "No Correlated Signals Found": "No Correlated Signals Found",
-  "No correlated signals were found for the given query. Please try a different query.": "No correlated signals were found for the given query. Please try a different query.",
   "Open the Troubleshooting Panel": "Open the Troubleshooting Panel",
+  "Query": "Query",
+  "Re-calculate the correlation graph starting from resources on the current console page.": "Re-calculate the correlation graph starting from resources on the current console page.",
+  "Show graph of connected classes up to the specified depth.": "Show graph of connected classes up to the specified depth.",
+  "Show graph of paths to signals of the specified class.": "Show graph of paths to signals of the specified class.",
+  "Show Query": "Show Query",
   "Troubleshooting": "Troubleshooting",
-  "Troubleshooting Panel": "Troubleshooting Panel"
+  "Troubleshooting Panel": "Troubleshooting Panel",
 }

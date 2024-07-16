@@ -32,6 +32,7 @@ export default function Popover() {
         <Flex className="tp-plugin__popover-title-bar" gap={{ default: 'gapNone' }}>
           <FlexItem grow={{ default: 'grow' }}>
             <Title headingLevel="h1">{t('Troubleshooting')}</Title>
+            <p>{t('Find related resources.')}</p>
           </FlexItem>
           <FlexItem>
             <Button variant="plain" aria-label="Close" onClick={close}>

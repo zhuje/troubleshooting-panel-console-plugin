@@ -27,7 +27,7 @@ export type QueryCount = {
 
 export type Korrel8rResponse = Array<QueryNode>;
 
-export type Korrel8rGraphNeighboursResponse = {
+export type Korrel8rGraphResponse = {
   nodes: Array<QueryNode>;
   edges?: Array<QueryEdge>;
 };
