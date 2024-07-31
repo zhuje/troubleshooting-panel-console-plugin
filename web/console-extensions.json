@@ -14,5 +14,12 @@
       "scope": "tp",
       "reducer": { "$codeRef": "TPReducer" }
     }
+  },
+  {
+    "type": "console.context-provider",
+    "properties": {
+      "provider": { "$codeRef": "NullContextProvider" },
+      "useValueHook": { "$codeRef": "usePopover" }
+    }
   }
 ]

@@ -78,7 +78,9 @@
     "description": "Troubleshooting Panel Plugin for OpenShift console. Used to display Korrel8r information",
     "exposedModules": {
       "TroubleshootingPanelActionsProvider": "./hooks/useTroubleshootingPanel",
-      "TPReducer": "./redux-reducers"
+      "TPReducer": "./redux-reducers",
+      "NullContextProvider": "./components/NullContextProvider",
+      "usePopover": "./hooks/usePopover"
     },
     "dependencies": {
       "@console/pluginAPI": "*"

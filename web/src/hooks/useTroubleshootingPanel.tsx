@@ -1,27 +1,18 @@
-import * as React from 'react';
-import {
-  Action,
-  ExtensionHook,
-  useActivePerspective,
-  useModal,
-} from '@openshift-console/dynamic-plugin-sdk';
+import { Action, ExtensionHook, useActivePerspective } from '@openshift-console/dynamic-plugin-sdk';
 import { InfrastructureIcon } from '@patternfly/react-icons';
-import Popover from '../components/Popover';
-import { useBoolean } from './useBoolean';
-import { useDispatch } from 'react-redux';
-import { useKorrel8r } from './useKorrel8r';
-import { openTP } from '../redux-actions';
-import { useURLState } from './useURLState';
+import * as React from 'react';
 import { useTranslation } from 'react-i18next';
+import { useDispatch } from 'react-redux';
+import { openTP } from '../redux-actions';
+import { useKorrel8r } from './useKorrel8r';
+import { useURLState } from './useURLState';
 
 const useTroubleshootingPanel: ExtensionHook<Array<Action>> = () => {
   const { isKorrel8rReachable } = useKorrel8r();
   const { korrel8rQueryFromURL } = useURLState();
   const { t } = useTranslation('plugin__troubleshooting-panel-console-plugin');
   const [perspective] = useActivePerspective();
-  const launchModal = useModal();
   const dispatch = useDispatch();
-  const [isLaunched, , setLaunched] = useBoolean(false);
   const open = React.useCallback(() => {
     dispatch(openTP());
   }, [dispatch]);
@@ -39,25 +30,19 @@ const useTroubleshootingPanel: ExtensionHook<Array<Action>> = () => {
           </div>
         ),
         description: t('Open the Troubleshooting Panel'),
-        cta: () => {
-          if (!isLaunched && launchModal) {
-            launchModal?.(Popover, {});
-            setLaunched();
-          }
-          open();
-        },
+        cta: open,
         disabled: false,
         tooltip: t('Open the Troubleshooting Panel'),
       },
     ];
     return actions;
-  }, [isLaunched, launchModal, open, setLaunched, t, isKorrel8rReachable, perspective]);
+  }, [open, t, isKorrel8rReachable, perspective]);
 
   const [actions, setActions] = React.useState<Array<Action>>(getActions());
 
   React.useEffect(() => {
     setActions(getActions());
-  }, [korrel8rQueryFromURL, isLaunched, launchModal, open, setLaunched, getActions]);
+  }, [korrel8rQueryFromURL, open, getActions]);
 
   return [actions, true, null];
 };
