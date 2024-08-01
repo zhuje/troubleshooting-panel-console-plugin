@@ -14,7 +14,7 @@ export type State = {
 const reducer = (state: TPState, action: TPAction): TPState => {
   if (!state) {
     return ImmutableMap({
-      isOpen: true,
+      isOpen: false,
       query: '',
       queryResponse: {
         nodes: [],
