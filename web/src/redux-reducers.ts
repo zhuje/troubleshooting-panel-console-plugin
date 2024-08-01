@@ -24,10 +24,10 @@ const reducer = (state: TPState, action: TPAction): TPState => {
   }
 
   switch (action.type) {
-    case ActionType.CloseTP:
+    case ActionType.CloseTroubleshootingPanel:
       return state.set('isOpen', false);
 
-    case ActionType.OpenTP:
+    case ActionType.OpenTroubleshootingPanel:
       return state.set('isOpen', true);
 
     default:
