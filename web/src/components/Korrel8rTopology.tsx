@@ -144,7 +144,8 @@ const getEdgesFromQueryResponse = (
 export const Korrel8rTopology: React.FC<{
   queryNodes: Array<QueryNode>;
   queryEdges: Array<QueryEdge>;
-}> = ({ queryNodes, queryEdges }) => {
+  setQuery: (query: string) => void;
+}> = ({ queryNodes, queryEdges, setQuery }) => {
   const location = useLocation();
   const history = useHistory();
 
@@ -178,16 +179,15 @@ export const Korrel8rTopology: React.FC<{
       if (!newlySelectedNode) {
         return;
       }
-      const node = nodes.find((node) => node.id.startsWith(newlySelectedNode));
-      if (!node) {
+      const korrel8rNode = nodes.find((node) => node.id.startsWith(newlySelectedNode))?.data
+        ?.korrel8rNode;
+      if (!korrel8rNode) {
         return;
       }
-      const url = nodes
-        .find((node) => node.id.startsWith(newlySelectedNode))
-        ?.data.korrel8rNode?.toURL();
-      history.push('/' + url);
+      setQuery(korrel8rNode.toQuery());
+      history.push('/' + korrel8rNode.toURL());
     },
-    [history, nodes, selectedIds],
+    [history, nodes, selectedIds, setQuery],
   );
 
   const controller = React.useMemo(() => {
