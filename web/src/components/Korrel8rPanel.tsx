@@ -42,7 +42,7 @@ export default function Korrel8rPanel() {
 
   // State
   const { korrel8rQueryFromURL } = useURLState();
-  const [query, setQuery] = React.useState(korrel8rQueryFromURL);
+  const [query, setQuery] = React.useState(korrel8rQueryFromURL); // Initial value from URL
   const [result, setResult] = React.useState<Result | null>(null);
   const [showQuery, setShowQuery] = React.useState(false);
   const [queryType, setQueryType] = React.useState(QueryType.Neighbour);
@@ -193,16 +193,22 @@ export default function Korrel8rPanel() {
       </ExpandableSection>
       <Divider />
       <FlexItem className="tp-plugin__panel-topology-container" grow={{ default: 'grow' }}>
-        {topology(result, t)}
+        {topology(result, t, setQuery)}
       </FlexItem>
     </>
   );
 }
 
-const topology = (result: Result, t: TFunction) => {
+const topology = (result: Result, t: TFunction, setQuery: (query: string) => void) => {
   if (result && result.graph && result.graph.nodes && result.graph.edges) {
     // Non-empty graph
-    return <Korrel8rTopology queryNodes={result.graph.nodes} queryEdges={result.graph.edges} />;
+    return (
+      <Korrel8rTopology
+        queryNodes={result.graph.nodes}
+        queryEdges={result.graph.edges}
+        setQuery={setQuery}
+      />
+    );
   }
 
   let info: React.ReactNode;
