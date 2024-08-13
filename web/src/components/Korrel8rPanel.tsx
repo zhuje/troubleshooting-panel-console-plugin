@@ -18,14 +18,15 @@ import {
   TextInput,
   Tooltip,
 } from '@patternfly/react-core';
-import { Korrel8rTopology } from './Korrel8rTopology';
+import { Korrel8rTopology } from './topology/Korrel8rTopology';
 import './korrel8rpanel.css';
 import { getGoalsGraph, getNeighborsGraph } from '../korrel8r-client';
 import { Korrel8rGraphResponse } from '../korrel8r/query.types';
-import { LoadingTopology } from './LoadingTopology';
+import { LoadingTopology } from './topology/LoadingTopology';
 import { TFunction, useTranslation } from 'react-i18next';
 import { CubesIcon, ExclamationCircleIcon } from '@patternfly/react-icons';
 import { useURLState } from '../hooks/useURLState';
+import { usePluginAvailable } from '../hooks/usePluginAvailable';
 
 type Result = {
   graph?: Korrel8rGraphResponse;
@@ -183,6 +184,7 @@ export default function Korrel8rPanel() {
                 onChange={(event: React.FormEvent<HTMLInputElement>) => {
                   setGoal((event.target as HTMLInputElement).value);
                 }}
+                aria-label="Korrel8r Query"
               />
             </FlexItem>
           </Flex>
@@ -193,52 +195,72 @@ export default function Korrel8rPanel() {
       </ExpandableSection>
       <Divider />
       <FlexItem className="tp-plugin__panel-topology-container" grow={{ default: 'grow' }}>
-        {topology(result, t, setQuery)}
+        <Topology result={result} t={t} setQuery={setQuery} />
       </FlexItem>
     </>
   );
 }
 
-const topology = (result: Result, t: TFunction, setQuery: (query: string) => void) => {
-  if (result && result.graph && result.graph.nodes && result.graph.edges) {
+interface TopologyProps {
+  result?: Result;
+  t: TFunction;
+  setQuery: (query: string) => void;
+}
+
+const Topology: React.FC<TopologyProps> = ({ result, t, setQuery }) => {
+  const [loggingAvailable, loggingAvailableLoading] = usePluginAvailable('logging-view-plugin');
+  const [netobserveAvailable, netobserveAvailableLoading] = usePluginAvailable('netobserv-plugin');
+
+  if (!result || loggingAvailableLoading || netobserveAvailableLoading) {
+    // korrel8r query is loading or the plugin checks are loading
+    return <Loading />;
+  }
+
+  if (result.graph && result.graph.nodes && result.graph.edges) {
     // Non-empty graph
     return (
       <Korrel8rTopology
         queryNodes={result.graph.nodes}
         queryEdges={result.graph.edges}
+        loggingAvailable={loggingAvailable}
+        netobserveAvailable={netobserveAvailable}
         setQuery={setQuery}
       />
     );
   }
 
-  let info: React.ReactNode;
-  if (result === null) {
-    info = <Loading />;
-  } else if (result.message) {
-    info = <TopologyInfoState titleText={result.title} text={result.message} isError={true} />;
-  } else {
-    info = (
+  if (result.message) {
+    // Error returned from korrel8r
+    return (
       <TopologyInfoState
-        titleText={t('No Correlated Signals Found')}
-        text={t('Correlation result was empty.')}
-        isError={false}
+        titleText={result.title}
+        // Only display fisrt 400 characters of error to prevent repeating errors
+        text={result.message.slice(0, 400)}
+        isError={true}
       />
     );
   }
+
   return (
-    <>
-      <div className="tp-plugin__panel-topology-info">{info}</div>
-      <LoadingTopology />
-    </>
+    <TopologyInfoState
+      titleText={t('No Correlated Signals Found')}
+      text={t('Correlation result was empty.')}
+      isError={false}
+    />
   );
 };
 
 const Loading: React.FC = () => (
-  <div className={'co-m-loader co-an-fade-in-out tp-plugin__panel-topology-info'}>
-    <div className="co-m-loader-dot__one" />
-    <div className="co-m-loader-dot__two" />
-    <div className="co-m-loader-dot__three" />
-  </div>
+  <>
+    <div className="tp-plugin__panel-topology-info">
+      <div className={'co-m-loader co-an-fade-in-out tp-plugin__panel-topology-info'}>
+        <div className="co-m-loader-dot__one" />
+        <div className="co-m-loader-dot__two" />
+        <div className="co-m-loader-dot__three" />
+      </div>
+    </div>
+    <LoadingTopology />
+  </>
 );
 
 interface TopologyInfoStateProps {
@@ -247,11 +269,7 @@ interface TopologyInfoStateProps {
   isError?: boolean;
 }
 
-const TopologyInfoState: React.FunctionComponent<TopologyInfoStateProps> = ({
-  titleText,
-  text,
-  isError,
-}) => {
+const TopologyInfoState: React.FC<TopologyInfoStateProps> = ({ titleText, text, isError }) => {
   return (
     <div className="tp-plugin__panel-topology-info">
       <EmptyState variant={EmptyStateVariant.sm}>

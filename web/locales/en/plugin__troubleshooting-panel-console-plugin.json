@@ -7,7 +7,9 @@
   "Hide Query": "Hide Query",
   "Korrel8 query selecting the starting points for correlation.": "Korrel8 query selecting the starting points for correlation.",
   "Korrel8r Error": "Korrel8r Error",
+  "Logging Plugin Disabled": "Logging Plugin Disabled",
   "Neighbourhood depth: ": "Neighbourhood depth: ",
+  "Netflow Plugin Disabled": "Netflow Plugin Disabled",
   "No Correlated Signals Found": "No Correlated Signals Found",
   "Open the Troubleshooting Panel": "Open the Troubleshooting Panel",
   "Query": "Query",
@@ -15,6 +17,8 @@
   "Show graph of connected classes up to the specified depth.": "Show graph of connected classes up to the specified depth.",
   "Show graph of paths to signals of the specified class.": "Show graph of paths to signals of the specified class.",
   "Show Query": "Show Query",
+  "The current console page does not show resources that are supported for correlation.": "The current console page does not show resources that are supported for correlation.",
   "Troubleshooting": "Troubleshooting",
   "Troubleshooting Panel": "Troubleshooting Panel",
+  "Unable to find Console Link": "Unable to find Console Link"
 }
