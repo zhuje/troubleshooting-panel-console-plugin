@@ -25,11 +25,14 @@ import {
   withSelection,
 } from '@patternfly/react-topology';
 import { ClusterIcon } from '@patternfly/react-icons';
-import { QueryEdge, QueryNode } from '../korrel8r/query.types';
-import { nodeToLabel } from '../korrel8r-utils';
-import { Korrel8rNodeFactory } from '../korrel8r/node-factory';
+import { QueryEdge, QueryNode } from '../../korrel8r/query.types';
+import { nodeToLabel } from '../../korrel8r-utils';
+import { Korrel8rNodeFactory } from '../../korrel8r/node-factory';
 import { useHistory, useLocation } from 'react-router';
-import { Korrel8rNode } from '../korrel8r/korrel8r.types';
+import { Korrel8rNode } from '../../korrel8r/korrel8r.types';
+import { InvalidNode } from '../../korrel8r/invalid';
+import { TFunction, useTranslation } from 'react-i18next';
+import './korrel8rtopology.css';
 
 interface Korrel8rTopologyNodeProps {
   element: Node;
@@ -46,6 +49,7 @@ type GraphNode = {
   shape: NodeShape;
   data: {
     korrel8rNode: Korrel8rNode;
+    tooltip: string;
   };
 };
 
@@ -57,13 +61,32 @@ type GraphEdge = {
   edgeStyle: EdgeStyle;
 };
 
+export enum NodeError {
+  invalid = 'invalid',
+  log = 'log',
+  netflow = 'netflow',
+}
+
 const Korrel8rTopologyNode: React.FC<Korrel8rTopologyNodeProps> = ({
   element,
   selected,
   onSelect,
 }) => {
+  if (element.getData().tooltip) {
+    return (
+      <g opacity="0.7" className="tp-plugin__topology_invalid_node">
+        <title>{element.getData().tooltip}</title>
+        <DefaultNode element={element} selected={selected} onSelect={onSelect} hover={false}>
+          <g transform={`translate(25, 25)`}>
+            <ClusterIcon style={{ color: '#393F44' }} width={25} height={25} />
+          </g>
+        </DefaultNode>
+      </g>
+    );
+  }
+
   return (
-    <DefaultNode element={element} showStatusDecorator selected={selected} onSelect={onSelect}>
+    <DefaultNode element={element} selected={selected} onSelect={onSelect}>
       <g transform={`translate(25, 25)`}>
         <ClusterIcon style={{ color: '#393F44' }} width={25} height={25} />
       </g>
@@ -92,17 +115,48 @@ const baselineComponentFactory: ComponentFactory = (kind: ModelKind, type: strin
 const NODE_SHAPE = NodeShape.ellipse;
 const NODE_DIAMETER = 75;
 
-const getNodesFromQueryResponse = (queryResponse: Array<QueryNode>): Array<GraphNode> => {
+const getErrorTooltip = (t: TFunction, error?: NodeError): string => {
+  switch (error) {
+    case NodeError.invalid:
+      return t('Unable to find Console Link');
+    case NodeError.log:
+      return t('Logging Plugin Disabled');
+    case NodeError.netflow:
+      return t('Netflow Plugin Disabled');
+    default:
+      return '';
+  }
+};
+
+const getNodesFromQueryResponse = (
+  queryResponse: Array<QueryNode>,
+  loggingAvailable: boolean,
+  netobserveAvailable: boolean,
+  t: TFunction,
+): Array<GraphNode> => {
   const nodes: Array<GraphNode> = [];
   queryResponse.forEach((node) => {
-    let korrel8rNode: Korrel8rNode | null = null;
+    let korrel8rNode: Korrel8rNode;
+    let error: NodeError;
+
     try {
       korrel8rNode = Korrel8rNodeFactory.fromQuery(node.queries.at(0)?.query);
     } catch (e) {
+      korrel8rNode = InvalidNode.fromQuery(node.queries.at(0)?.query);
       // eslint-disable-next-line no-console
       console.error(e);
-      return;
+      error = NodeError.invalid;
     }
+
+    if (node.class.startsWith('log') && !loggingAvailable) {
+      korrel8rNode = InvalidNode.fromQuery(node.queries.at(0)?.query);
+      error = NodeError.log;
+    }
+    if (node.class.startsWith('netflow') && !netobserveAvailable) {
+      korrel8rNode = InvalidNode.fromQuery(node.queries.at(0)?.query);
+      error = NodeError.netflow;
+    }
+
     nodes.push({
       id: node.class + Date.now(),
       type: 'node',
@@ -112,6 +166,7 @@ const getNodesFromQueryResponse = (queryResponse: Array<QueryNode>): Array<Graph
       shape: NODE_SHAPE,
       data: {
         korrel8rNode,
+        tooltip: getErrorTooltip(t, error),
       },
     });
   });
@@ -144,12 +199,18 @@ const getEdgesFromQueryResponse = (
 export const Korrel8rTopology: React.FC<{
   queryNodes: Array<QueryNode>;
   queryEdges: Array<QueryEdge>;
+  loggingAvailable: boolean;
+  netobserveAvailable: boolean;
   setQuery: (query: string) => void;
-}> = ({ queryNodes, queryEdges, setQuery }) => {
+}> = ({ queryNodes, queryEdges, loggingAvailable, netobserveAvailable, setQuery }) => {
+  const { t } = useTranslation('plugin__troubleshooting-panel-console-plugin');
   const location = useLocation();
   const history = useHistory();
 
-  const nodes = React.useMemo(() => getNodesFromQueryResponse(queryNodes), [queryNodes]);
+  const nodes = React.useMemo(
+    () => getNodesFromQueryResponse(queryNodes, loggingAvailable, netobserveAvailable, t),
+    [queryNodes, loggingAvailable, netobserveAvailable, t],
+  );
   const edges = React.useMemo(
     () => getEdgesFromQueryResponse(queryEdges, nodes),
     [queryEdges, nodes],
@@ -179,8 +240,11 @@ export const Korrel8rTopology: React.FC<{
       if (!newlySelectedNode) {
         return;
       }
-      const korrel8rNode = nodes.find((node) => node.id.startsWith(newlySelectedNode))?.data
-        ?.korrel8rNode;
+      const node = nodes.find((node) => node.id.startsWith(newlySelectedNode));
+      if (!node || node.data.tooltip) {
+        return;
+      }
+      const korrel8rNode = node?.data?.korrel8rNode;
       if (!korrel8rNode) {
         return;
       }
