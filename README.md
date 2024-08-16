@@ -10,7 +10,7 @@ push it to an image registry.
 1. Build the image:
 
    ```sh
-   docker build -t quay.io/my-repository/troubleshooting-panel-console-plugin:latest .
+   docker build -t quay.io/my-repository/troubleshooting-panel-console-plugin:latest -f Dockerfile.dev .
    ```
 
    > [!NOTE]

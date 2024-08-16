@@ -28,7 +28,7 @@ lint-frontend:
 
 .PHONY: build-backend
 build-backend:
-	go build -o plugin-backend cmd/plugin-backend.go
+	go build $(BUILD_OPTS) -o plugin-backend -mod=readonly cmd/plugin-backend.go
 
 .PHONY: start-backend
 start-backend:
