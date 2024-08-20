@@ -1,5 +1,6 @@
-import { Korrel8rDomain, Korrel8rNode, NodeError } from './korrel8r.types';
 import { getCachedResources } from '../getResources';
+import { Korrel8rDomain, Korrel8rNode, NodeError } from './korrel8r.types';
+import { keyValueList, parseQuery, parseURL } from './query-url';
 
 type GroupVersionKind = {
   group?: string;
@@ -21,7 +22,8 @@ type QueryData = {
 
 type Model = {
   kind: string;
-  apiVersion: string; // apiVersion is vN or group/vN
+  apiVersion: string;
+  apiGroup: string;
   path: string;
   verbs: string[];
 };
@@ -42,12 +44,12 @@ export class K8sNode extends Korrel8rNode {
   }
 
   static fromURL(url: string): Korrel8rNode {
-    const urlObject = new URL(url, 'http://domain');
-    const params = new URLSearchParams(urlObject.search);
-    const [, namespace, resource, name, events] = urlObject.pathname.match(pathRegex);
+    const [path, params] = parseURL('k8s', 'k8s|search', url);
+    const [, namespace, resource, name, events] = path.match(pathRegex) || [];
     const groupVersionKind = this.getGroupVersionKind(resource, params.get('kind'));
 
-    if (!groupVersionKind || !groupVersionKind.kind) throw new NodeError(`invalid k8s URL: ${url}`);
+    if (!groupVersionKind || !groupVersionKind.kind)
+      throw new NodeError(`Expected k8s URL: ${url}`);
     if (events) {
       const data = {
         fields: {
@@ -70,17 +72,16 @@ export class K8sNode extends Korrel8rNode {
   }
 
   static fromQuery(query: string): Korrel8rNode {
-    const [, domain, clazz, dataStr] = query.match(/^([^:]+):([^:]+):(.+)$/) ?? [];
-    if (domain != 'k8s') throw new NodeError(`invalid k8s query: ${query}`);
+    const [clazz, dataStr] = parseQuery('k8s', query);
     const [, kind, version, group] = clazz.match(/^([^.]+)(?:\.([^.]*)(?:\.(.*))?)?$/) ?? [];
-    if (!kind) throw new NodeError(`invalid k8s class: ${clazz}`);
+    if (!kind) throw new NodeError(`Expected k8s class: ${clazz}`);
     let gvk: GroupVersionKind = { kind: kind, version: version || 'v1', group: group || undefined };
 
     let data: QueryData;
     try {
       data = JSON.parse(dataStr) as QueryData;
     } catch (e) {
-      throw new NodeError(`invalid k8s query data: ${dataStr}: ${e}`);
+      throw new NodeError(`Invalid k8s query data: ${dataStr}: ${e}`);
     }
 
     let namespace = '',
@@ -104,24 +105,19 @@ export class K8sNode extends Korrel8rNode {
     const [gvk2, resource] = this.findKind(gvk); // Fill out partial GVK
     gvk = gvk2;
     const nsPath = namespace ? `ns/${namespace}` : 'all-namespaces';
-    const selector = Object.keys(data.labels || {})
-      .map((k) => `${k}=${data.labels[k]}`)
-      .join(',');
-    const qParam = selector ? `q=${encodeURIComponent(selector)}` : '';
+    const qParam = data.labels ? `?q=${encodeURIComponent(keyValueList(data.labels))}` : '';
 
     let url: string;
     if (!name && !namespace && qParam) {
       // Search URL
       url =
-        `search/${nsPath}?${qParam}&kind=` +
+        `search/${nsPath}${qParam}&kind=` +
         `${gvk.group || 'core'}~` +
         `${gvk.version || undefined}~` +
         `${gvk.kind}`;
     } else {
       // Resource URL
-      url = `k8s/${nsPath}/${resource}${name ? `/${name}` : ''}${
-        qParam ? `?${qParam}` : ''
-      }${events}`;
+      url = `k8s/${nsPath}/${resource}${name && `/${name}`}${qParam}${events}`;
     }
     return new K8sNode(url, query);
   }
@@ -141,10 +137,10 @@ export class K8sNode extends Korrel8rNode {
       if (resource === 'projects') resource = 'namespaces';
       return this.findResource(resource);
     }
-    if (resource || kind) {
-      // Either kind or resource may be a g~v~k string.
+    const gvkStr = resource || kind; // Either kind or resource may be a g~v~k string.
+    if (gvkStr) {
       const parts = (resource || kind).split('~');
-      if (parts.length !== 3 || !parts[2]) throw new NodeError('invalid k8s URL');
+      if (parts.length !== 3 || !parts[2]) throw new NodeError('Expected k8s URL');
       const gvk: GroupVersionKind = {
         group: !parts[0] || parts[0] === 'core' ? undefined : parts[0],
         version: parts[1] || undefined,
@@ -152,7 +148,7 @@ export class K8sNode extends Korrel8rNode {
       };
       return this.findKind(gvk)[0]; // Fill it out
     }
-    throw new NodeError('invalid k8s URL');
+    throw new NodeError(`Invalid k8s resource: ${gvkStr}`);
   }
 
   // parseSelector parses a selector string as a query map.
@@ -171,19 +167,23 @@ export class K8sNode extends Korrel8rNode {
     const model = getCachedResources()?.models.find(
       (m: Model) => m.path === resource && m.verbs.includes('watch'),
     );
-    if (!model) throw new NodeError(`k8s resource not recognized: ${resource} `);
-    return K8sNode.makeGroupVersionKind(model.apiVersion, model.kind);
+    if (!model) throw new NodeError(`Unknown k8s resource: ${resource} `);
+    return { group: model.apiGroup, version: model.apiVersion, kind: model.kind };
   }
 
   // Returns the model matching a gvk or throws an error.
   private static findKind(gvk: GroupVersionKind): [fullGVK: GroupVersionKind, resource: string] {
-    const apiVersionMatch = `${gvk.group ? `${gvk.group}/` : ''}${gvk.version || ''}`;
     const model = getCachedResources()?.models.find(
       (m: Model) =>
-        m.kind === gvk.kind && m.verbs.includes('watch') && m.apiVersion.match(apiVersionMatch),
+        m.kind === gvk.kind &&
+        m.verbs.includes('watch') &&
+        (!gvk.group || gvk.group === m.apiGroup) &&
+        (!gvk.version || gvk.version === m.apiVersion),
     );
-    if (!model) throw new NodeError(`k8s kind not recognized: ${JSON.stringify(gvk)} `);
-    return [this.makeGroupVersionKind(model.apiVersion, model.kind), model.path];
+    if (!model) {
+      throw new NodeError(`Unknown k8s kind: ${JSON.stringify(gvk)} `);
+    }
+    return [{ group: model.apiGroup, version: model.apiVersion, kind: model.kind }, model.path];
   }
 
   // makeGroupVersionKind from a kind and an apiVersion.
@@ -192,7 +192,7 @@ export class K8sNode extends Korrel8rNode {
     if (parts.length == 1) return { version: parts[0] || undefined, kind: kind };
     if (parts.length == 2)
       return { group: parts[0] || undefined, version: parts[1] || undefined, kind: kind };
-    throw new NodeError('invalid k8s apiVersion: ${apiVersion}');
+    throw new NodeError('Invalid k8s apiVersion: ${apiVersion}');
   }
 
   private static apiVersionFor(gvk: GroupVersionKind): string {

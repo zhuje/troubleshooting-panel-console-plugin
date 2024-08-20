@@ -17,7 +17,8 @@ beforeAll(() => {
       },
       {
         kind: 'Deployment',
-        apiVersion: 'apps/v1',
+        apiVersion: 'v1',
+        apiGroup: 'apps',
         path: 'deployments',
         verbs: ['watch'],
       },
@@ -41,7 +42,8 @@ beforeAll(() => {
       },
       {
         kind: 'Role',
-        apiVersion: 'rbac.authorization.k8s.io/v1',
+        apiVersion: 'v1',
+        apiGroup: 'rbac.authorization.k8s.io',
         path: 'roles',
         verbs: ['watch'],
       },
@@ -53,7 +55,8 @@ beforeAll(() => {
       },
       {
         kind: 'ClusterServiceVersion',
-        apiVersion: 'operators.coreos.com/v1alpha1',
+        apiVersion: 'v1alpha1',
+        apiGroup: 'operators.coreos.com',
         path: 'operators',
         verbs: ['watch'],
       },
@@ -148,10 +151,10 @@ describe('K8sNode.fromQuery', () => {
   });
 
   it.each([
-    { query: `foo:bar:baz`, err: 'invalid k8s query' },
-    { query: `k8s:Pod`, err: 'invalid k8s query' },
-    { query: `k8s:nosuch:{}`, err: 'not recognized' },
-    { query: `k8s:Role.v1.bad.group:{}`, err: `not recognized` },
+    { query: `foo:bar:baz`, err: 'Invalid k8s query' },
+    { query: `k8s:Pod`, err: 'Invalid k8s query' },
+    { query: `k8s:nosuch:{}`, err: 'Unknown k8s kind:' },
+    { query: `k8s:Role.v1.bad.group:{}`, err: `Unknown k8s kind:` },
   ])('raises error on $query', ({ query, err }) =>
     expect(() => {
       K8sNode.fromQuery(query);

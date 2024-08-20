@@ -1,6 +1,8 @@
-import { Korrel8rNode, Korrel8rDomain, NodeError } from './korrel8r.types';
+import { Korrel8rDomain, Korrel8rNode, NodeError } from './korrel8r.types';
+import { keyValueList, parseKeyValueList, parseQuery, parseURL } from './query-url';
 
-export const ALLOWED_ALERT_QUERY_KEYS = ['alert', 'alertname', 'container', 'namespace', 'pod'];
+const domain = 'alert';
+
 export class AlertNode extends Korrel8rNode {
   domain: Korrel8rDomain = Korrel8rDomain.Alert;
   query: string;
@@ -12,52 +14,45 @@ export class AlertNode extends Korrel8rNode {
     this.url = url;
   }
 
+  // fromURL creates a node from a URL.
+  //
+  // NOTE: There are two types of console alert URL:
+  // - individual URL: numeric ID in path, query parameters are label selectors.
+  // - search URL: nothing in path, 'alert' query parameter contains encoded list of label selectors
+  //
   static fromURL(url: string): Korrel8rNode {
-    if (!url.startsWith('monitoring/alerts'))
-      throw new NodeError('Expected url to start with monitoring/alerts');
-    const urlObject = new URL('http://domain' + url);
-    const urlQuerySegment = urlObject.search;
-    if (!urlQuerySegment) throw new NodeError('Expected URL to contain query parameters');
-
-    const urlSearchParams = new URLSearchParams(urlQuerySegment);
-    const queryParams = Array.from(urlSearchParams.entries()).filter(([key]) =>
-      ALLOWED_ALERT_QUERY_KEYS.includes(key),
-    );
-    if (queryParams.length === 0)
-      throw new NodeError('Expected more than 0 relevant query parameters');
-
-    const query = `alert:alert:{${queryParams
-      .map(([key, value]) => `"${key}":"${value}"`)
-      .join(',')}}`;
-    return new AlertNode(url, query);
+    const prefix = 'monitoring/alerts';
+    const [path, params] = parseURL(domain, prefix, url);
+    let selectors = {};
+    if (path === '/' + prefix) {
+      // No ID in path, this is a search URL
+      selectors = parseKeyValueList(params.get('alerts'));
+    } else {
+      params.delete('prometheus'); // Not part of the label selectors.
+      for (const [key, value] of params) selectors[key] = value;
+    }
+    return new AlertNode(url, `alert:alert:${JSON.stringify(selectors)}`);
   }
 
+  // fromQuery only creates search-style URLs, never instance URLs.
   static fromQuery(query: string): Korrel8rNode {
-    if (!query.startsWith('alert:alert:'))
-      throw new NodeError('Expected query to start with alert:alert:');
-
-    const queryAfterClass = query.substring('alert:alert:'.length);
-    if (!queryAfterClass) throw new NodeError('Expected query to contain {}');
-
-    let queryJSON;
     try {
-      queryJSON = JSON.parse(queryAfterClass);
+      const [, data] = parseQuery(domain, query);
+      const search = new URLSearchParams();
+      const selectors = keyValueList(JSON.parse(data));
+      if (selectors) search.set('alerts', selectors);
+      return new AlertNode(
+        `monitoring/alerts${search.size > 0 ? '?' + search.toString() : ''}`,
+        query,
+      );
     } catch (e) {
-      throw new NodeError('');
+      throw new NodeError(`Invalid query data ${query}: ${e.message} `);
     }
-    if (Object.keys(queryJSON).length === 0)
-      throw new NodeError('Expected query to contain relevant query parameters');
-    if (queryJSON['alertname'] && !queryJSON['name']) {
-      queryJSON['name'] = queryJSON['alertname'];
-    }
-    const url = `monitoring/alerts?${new URLSearchParams(queryJSON).toString()}`;
-    return new AlertNode(url, query);
   }
 
   toURL(): string {
     return this.url;
   }
-
   toQuery(): string {
     return this.query;
   }

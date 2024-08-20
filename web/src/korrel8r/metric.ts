@@ -1,4 +1,5 @@
 import { Korrel8rDomain, Korrel8rNode, NodeError } from './korrel8r.types';
+import { parseURL } from './query-url';
 
 export class MetricNode extends Korrel8rNode {
   domain: Korrel8rDomain = Korrel8rDomain.Alert;
@@ -12,16 +13,10 @@ export class MetricNode extends Korrel8rNode {
   }
 
   static fromURL(url: string): Korrel8rNode {
-    if (!url.startsWith('monitoring/query-browser'))
-      throw new NodeError('Expected url to start with monitoring/query-browser');
-    const urlObject = new URL('http://domain' + url);
-    const urlQuerySegment = urlObject.search;
-    if (!urlQuerySegment) throw new NodeError('Expected URL to contain query parameters');
-
-    const urlSearchParams = new URLSearchParams(urlQuerySegment);
-    if (urlSearchParams.size === 0)
-      throw new NodeError('Expected more than 0 relevant query parameters');
-    const promqlQuery = urlSearchParams.get('query0');
+    const [_, params] = parseURL('metric', 'monitoring/query-browser', url);
+    if (!params || params.size == 0)
+      throw new NodeError(`Expected query parameters in metric URL: ${url}`);
+    const promqlQuery = params.get('query0');
     if (!promqlQuery) throw new NodeError('Expected to find query0');
     const query = `metric:metric:${promqlQuery}`;
 

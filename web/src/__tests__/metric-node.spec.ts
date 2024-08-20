@@ -30,15 +30,15 @@ describe('Test MetricNode Parsing', () => {
     [
       {
         url: 'monitoring/query-browse',
-        expected: 'Expected url to start with monitoring/query-browser',
+        expected: 'Expected metric URL: monitoring/query-browse',
       },
       {
         url: 'monitoring/query-browser',
-        expected: 'Expected URL to contain query parameters',
+        expected: 'Expected query parameters in metric URL:',
       },
       {
         url: 'monitoring/query-browser?',
-        expected: 'Expected URL to contain query parameters',
+        expected: 'Expected query parameters in metric URL:',
       },
       {
         url: 'monitoring/query-browser?query1=wrong_query',
