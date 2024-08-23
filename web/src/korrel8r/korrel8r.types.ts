@@ -7,7 +7,6 @@ export enum Korrel8rDomain {
 }
 
 export abstract class Korrel8rNode {
-  domain: Korrel8rDomain;
   static fromURL: (url: string) => Korrel8rNode;
   static fromQuery: (query: string) => Korrel8rNode;
   abstract toURL(): string;

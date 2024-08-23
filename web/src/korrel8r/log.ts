@@ -1,4 +1,4 @@
-import { Korrel8rDomain, Korrel8rNode, NodeError } from './korrel8r.types';
+import { Korrel8rNode, NodeError } from './korrel8r.types';
 import { parseQuery, parseURL } from './query-url';
 
 enum LogClass {
@@ -12,7 +12,6 @@ const addJSON = (logQL: string): string => {
 };
 
 export class LogNode extends Korrel8rNode {
-  domain: Korrel8rDomain = Korrel8rDomain.Alert;
   logClass: LogClass;
   query: string;
   url: string;

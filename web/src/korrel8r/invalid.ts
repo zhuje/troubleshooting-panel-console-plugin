@@ -1,7 +1,6 @@
-import { Korrel8rDomain, Korrel8rNode } from './korrel8r.types';
+import { Korrel8rNode } from './korrel8r.types';
 
 export class InvalidNode extends Korrel8rNode {
-  domain: Korrel8rDomain = Korrel8rDomain.Alert;
   query: string;
   url: string;
 
