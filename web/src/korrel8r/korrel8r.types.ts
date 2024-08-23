@@ -4,6 +4,7 @@ export enum Korrel8rDomain {
   Alert = 'alert',
   K8s = 'k8s',
   Log = 'log',
+  Trace = 'trace',
 }
 
 export abstract class Korrel8rNode {
@@ -14,6 +15,13 @@ export abstract class Korrel8rNode {
 }
 
 export class NodeError extends Error {
+  constructor(reason: string) {
+    super(reason);
+  }
+}
+
+// Thrown when a URL or Query does not match the Korrel8rNode class trying to parse it.
+export class WrongDomainError extends NodeError {
   constructor(reason: string) {
     super(reason);
   }

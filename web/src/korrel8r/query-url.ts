@@ -1,4 +1,4 @@
-import { NodeError } from './korrel8r.types';
+import { NodeError, WrongDomainError } from './korrel8r.types';
 
 // Return URL path and query parameters. Throw if URL does not match pattern.
 export const parseURL = (
@@ -7,7 +7,7 @@ export const parseURL = (
   url: string,
 ): [path: string, params: URLSearchParams] => {
   if (pattern && !url.match(new RegExp(`(${pattern})([/?]|$)`))) {
-    throw new NodeError(`Expected ${domain} URL: ${url}`);
+    throw new WrongDomainError(`Expected ${domain} URL: ${url}`);
   }
   try {
     const u = new URL(url, 'http://dummy'); // Need dummy scheme & host for URL parser.
