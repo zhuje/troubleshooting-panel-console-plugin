@@ -1,0 +1,67 @@
+= Troubleshooting Panel User Guide
+:doctype: book
+:toc: left
+
+The troubleshooting panel displays a graph of related resources and observability signals.
+Clicking on a node in the graph opens a console page showing the details of each resource or signal.
+Nodes in the graph represent a resource or signal type, edges represent relationships.
+
+The panel provides a map of related information, so you can navigate more quickly to relevant data.
+It may also help to find related information that you were not aware of.
+
+Lets consider the example of troubleshooting an Alert on the OCP console.
+
+== Opening the panel
+
+First open the alert of interest in the console.
+Now open the troubleshooting panel [FIXME global button]
+
+Opening panel shows a _neighbourhood_ of the resource currently displayed in the console.
+A neighbourhood graph starts at the current resource, and includes related objects up to
+3 steps away from the starting point.
+
+NOTE: Not all resource types are currently supported, more will be added in future.
+For an unsupported resource, the panel will be empty.
+
+[.border]
+image::images/panel-graph.png[]
+
+
+<1> Alert(1) node represents the starting point alert in the console. TYPE OF ALERT
+<2> Pod(1) indicates that there is a single Pod resource associated with this alert. Clicking on this node will open a console search showing the related pod directly.
+<3> Event(2) there are two kuberenetes events associated with the Pod, you can see them by clicking this node.
+<3> Logs(74) The pod has emitted logs, click to jump to them.
+<4> Metrics(105) There are many metrics associated with every Pod.
+<6> Network(6) shows that there are network events, which means the pod has communicated over the network. The remaining nodes are the Service, Deployment and DaemonSet that the pod has communicated with.
+<7> Focus: Clicking on nodes in the graph will change what is shown in the main console page, but the graph will not change.
+    You can also navigate using links on the console page while the panel is open.
+    To update the graph, click "Focus". This will draw a new graph using the resource shown in the main page as the starting point.
+<8> Show Query enables some experimental features, see below.
+
+NOTE: Clicking on a node may sometimes show fewer results than are indicated on the graph. This is a known issue that will be addressed in future.
+
+
+== Experimental features
+
+[.border]
+image::images/query-details.png[]
+
+<1> Hide Query hides the experimental features.
+<2> The "Korrel8r query" that identifies the starting point for the graph. This query language is experimental and will change in future.
+    It is updated by the "Focus" button to correspond to the resources in the main console window. (TODO upstream reference or no?)
+<3> Neighbourhood depth: increase or decrease to see a smaller or larger neighbourhood.
+    Note: setting a large value in a large cluster may cause the query to fail if the number of results is too big.
+<4> Goal class: Selecting this option will do a _goal directed search_ instead of a neighbourhood search.
+    A goal directed search will show all paths from the starting point to the goal _class_ , which indicates a type of resource or signal.
+    The format of the goal class is experimental and may change. Currently valid goals are
+    - `k8s:RESOURCE[VERSION.[GROUP]]` - identifies a Kind of kuberenetes resource. For example `k8s:Pod` or `k8s:Deployment.apps.v1`.
+    - `alert:alert` - any alert.
+    - `metric:metric` - any metric.
+    - `netflow:network` - any netobserv network event.
+    - `log:LOG_TYPE` - LOG_TYPE must be `application`, `infrastructure` or `audit`
+
+== Optional signal stores
+
+The panel will show the resources and signals that are installed for your cluster.
+Kuberenetes resources, alerts and metrics are always available in OCP.
+Other signals are optional: logs or network flow events will only appear if Openshift Logging or Network Observabilty are installed.

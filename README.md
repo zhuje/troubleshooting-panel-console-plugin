@@ -2,6 +2,8 @@
 
 This plugin is used to add the Troubleshooting Panel to view Korrel8r data. It is currently under construction and shows a new tab under observe.
 
+The [user guide](doc/README.adoc) describes the panel from a user perspective, this README is for developers.
+
 ## Docker image
 
 Before you can deploy your plugin on a cluster, you must build an image and
