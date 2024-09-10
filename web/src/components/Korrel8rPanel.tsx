@@ -216,12 +216,12 @@ const Topology: React.FC<TopologyProps> = ({ result, t, setQuery }) => {
     return <Loading />;
   }
 
-  if (result.graph && result.graph.nodes && result.graph.edges) {
+  if (result.graph && result.graph.nodes) {
     // Non-empty graph
     return (
       <Korrel8rTopology
-        queryNodes={result.graph.nodes}
-        queryEdges={result.graph.edges}
+        queryNodes={result.graph.nodes || []}
+        queryEdges={result.graph.edges || []}
         loggingAvailable={loggingAvailable}
         netobserveAvailable={netobserveAvailable}
         setQuery={setQuery}
