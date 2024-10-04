@@ -195,3 +195,7 @@ overwriting default console styles, breaking the layout of existing pages. The
 best practice is to prefix your CSS classnames with your plugin name to avoid
 conflicts. Please don't disable these rules without understanding how they can
 break console styles!
+
+### Local Development Troubleshooting
+1. Disable cache. Select 'disable cache' in your browser's DevTools > Network > 'disable cache'. Or use private/incognito mode in your browser.
+2. Enable higher log verbosity by setting `-log-level=trace` when starting the plugin backend. For more options to set log level see [logrus documentation](https://github.com/sirupsen/logrus?tab=readme-ov-file#level-logging). 
