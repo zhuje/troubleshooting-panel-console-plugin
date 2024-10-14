@@ -26,6 +26,10 @@ start-console:
 lint-frontend:
 	cd web && npm run lint
 
+.PHONY: install-backend
+install-backend:
+	go mod download
+
 .PHONY: build-backend
 build-backend:
 	go build $(BUILD_OPTS) -o plugin-backend -mod=readonly cmd/plugin-backend.go
