@@ -13,12 +13,11 @@ export const listDomains = () => {
 };
 
 export const getNeighborsGraph = ({ query }: { query?: string }, depth: number) => {
-  query = query.trim();
   const requestData = {
     method: 'POST',
     body: JSON.stringify({
       start: {
-        queries: query ? [query] : [],
+        queries: query ? [query.trim()] : [],
       },
       depth: depth,
     }),
@@ -31,12 +30,11 @@ export const getNeighborsGraph = ({ query }: { query?: string }, depth: number) 
 };
 
 export const getGoalsGraph = ({ query }: { query?: string }, goal: string) => {
-  query = query.trim();
   const requestData = {
     method: 'POST',
     body: JSON.stringify({
       start: {
-        queries: query ? [query] : [],
+        queries: query ? [query.trim()] : [],
       },
       goals: [goal],
     }),
