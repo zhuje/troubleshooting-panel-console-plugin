@@ -23,6 +23,8 @@ export const nodeToLabel = (node: QueryNode): string => {
       return `${nodeClass} (${node.count})`;
     case Korrel8rDomain.Netflow:
       return `Network (${node.count})`;
+    case Korrel8rDomain.Trace:
+      return `Trace (${node.count})`;
     default:
       // eslint-disable-next-line no-console
       console.warn(`Unknown node type: ${node.class}`);
