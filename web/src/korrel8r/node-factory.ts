@@ -1,37 +1,46 @@
-import { Korrel8rNode } from './korrel8r.types';
-
 import { AlertNode } from './alert';
+import { InvalidNode } from './invalid';
+import { K8sNode } from './k8s';
+import { Korrel8rNode, WrongDomainError } from './korrel8r.types';
 import { LogNode } from './log';
 import { MetricNode } from './metric';
 import { NetflowNode } from './netflow';
-import { K8sNode } from './k8s';
+import { TraceNode } from './trace';
 
 export class Korrel8rNodeFactory {
   static fromURL(url: string): Korrel8rNode {
-    if (url.startsWith('monitoring/alerts')) {
-      return AlertNode.fromURL(url);
-    } else if (url.startsWith('monitoring/logs')) {
-      return LogNode.fromURL(url);
-    } else if (url.startsWith('monitoring/query-browser')) {
-      return MetricNode.fromURL(url);
-    } else if (url.startsWith('netflow-traffic')) {
-      return NetflowNode.fromURL(url);
-    } else {
-      return K8sNode.fromURL(url);
-    }
+    [
+      AlertNode.fromURL,
+      K8sNode.fromURL,
+      LogNode.fromURL,
+      MetricNode.fromURL,
+      NetflowNode.fromURL,
+      TraceNode.fromURL,
+    ].forEach((fromURL): Korrel8rNode => {
+      try {
+        // eslint-disable-next-line no-console
+        console.error(`FIXME ${fromURL} ${url}`);
+        return fromURL(url);
+      } catch (e) {
+        if (!(e instanceof WrongDomainError)) {
+          throw e;
+        }
+      }
+    });
+    return InvalidNode.fromURL(url);
   }
+
   static fromQuery(query: string): Korrel8rNode {
-    switch (query.split(':').at(0)) {
-      case 'alert':
-        return AlertNode.fromQuery(query);
-      case 'log':
-        return LogNode.fromQuery(query);
-      case 'metric':
-        return MetricNode.fromQuery(query);
-      case 'netflow':
-        return NetflowNode.fromQuery(query);
-      default:
-        return K8sNode.fromQuery(query);
-    }
+    const lookup = {
+      alert: AlertNode.fromQuery,
+      k8s: K8sNode.fromQuery,
+      log: LogNode.fromQuery,
+      metric: MetricNode.fromQuery,
+      netflow: NetflowNode.fromQuery,
+      trace: TraceNode.fromQuery,
+    };
+    const fromQuery = lookup[query.split(':').at(0)];
+    if (fromQuery) return fromQuery(query);
+    return InvalidNode.fromQuery(query);
   }
 }

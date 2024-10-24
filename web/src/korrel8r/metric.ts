@@ -1,8 +1,7 @@
-import { Korrel8rDomain, Korrel8rNode, NodeError } from './korrel8r.types';
+import { Korrel8rNode, NodeError } from './korrel8r.types';
 import { parseURL } from './query-url';
 
 export class MetricNode extends Korrel8rNode {
-  domain: Korrel8rDomain = Korrel8rDomain.Alert;
   query: string;
   url: string;
 

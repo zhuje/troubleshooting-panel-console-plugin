@@ -1,5 +1,5 @@
 import { getCachedResources } from '../getResources';
-import { Korrel8rDomain, Korrel8rNode, NodeError } from './korrel8r.types';
+import { Korrel8rNode, NodeError } from './korrel8r.types';
 import { keyValueList, parseQuery, parseURL } from './query-url';
 
 type GroupVersionKind = {
@@ -33,7 +33,6 @@ const pathRegex = new RegExp(
 );
 
 export class K8sNode extends Korrel8rNode {
-  domain: Korrel8rDomain = Korrel8rDomain.Alert;
   query: string;
   url: string;
 

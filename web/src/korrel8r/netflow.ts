@@ -1,4 +1,4 @@
-import { Korrel8rDomain, Korrel8rNode, NodeError } from './korrel8r.types';
+import { Korrel8rNode, NodeError } from './korrel8r.types';
 import { parseQuery, parseURL } from './query-url';
 
 // https://docs.openshift.com/container-platform/4.15/observability/network_observability/json-flows-format-reference.html
@@ -25,7 +25,6 @@ const urlToQueryName = Object.entries(queryToURLName).reduce((result, [key, valu
 }, {});
 
 export class NetflowNode extends Korrel8rNode {
-  domain: Korrel8rDomain = Korrel8rDomain.Alert;
   query: string;
   url: string;
 
