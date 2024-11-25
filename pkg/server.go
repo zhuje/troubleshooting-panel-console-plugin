@@ -14,7 +14,13 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/sirupsen/logrus"
 	"gopkg.in/yaml.v2"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apiserver/pkg/server/dynamiccertificates"
+	"k8s.io/client-go/informers"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/rest"
+	"k8s.io/client-go/tools/cache"
+	// "k8s.io/client-go/tools/clientcmd"
 )
 
 var log = logrus.WithField("module", "server")
@@ -45,6 +51,38 @@ func (pluginConfig *PluginConfig) MarshalJSON() ([]byte, error) {
 	})
 }
 
+func watchSecrets(clientset *kubernetes.Clientset) {
+	// Start the informer for Secrets
+	informerFactory := informers.NewSharedInformerFactory(clientset, time.Second*30)
+	secretInformer := informerFactory.Core().V1().Secrets().Informer()
+
+	// Define the event handlers
+	secretInformer.AddEventHandler(
+		cache.ResourceEventHandlerFuncs{
+			AddFunc: func(obj interface{}) {
+				secret := obj.(*v1.Secret)
+				fmt.Printf("New Secret added: %s\n", secret.Name)
+			},
+			UpdateFunc: func(oldObj, newObj interface{}) {
+				secret := newObj.(*v1.Secret)
+				fmt.Printf("Secret updated: %s\n", secret.Name)
+			},
+			DeleteFunc: func(obj interface{}) {
+				secret := obj.(*v1.Secret)
+				fmt.Printf("Secret deleted: %s\n", secret.Name)
+			},
+		},
+	)
+
+	// Start informer and wait for events
+	stopCh := make(chan struct{})
+	defer close(stopCh)
+	informerFactory.Start(stopCh)
+
+	// Block until an interrupt signal
+	<-stopCh
+}
+
 func Start(cfg *Config) {
 	router, pluginConfig := setupRoutes(cfg)
 	router.Use(corsHeaderMiddleware())
@@ -56,6 +94,19 @@ func Start(cfg *Config) {
 	timeout := 30 * time.Second
 	if pluginConfig != nil {
 		timeout = pluginConfig.Timeout
+	}
+
+	// JZ TEST
+	// Get the Kubernetes config and client
+	// config, err := clientcmd.BuildConfigFromFlags("", "/Users/jezhu/.kube/config")
+	config, err := rest.InClusterConfig()
+	if err != nil {
+		log.Fatalf("Failed to build config: %v", err)
+	}
+
+	clientset, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		log.Fatalf("Failed to create Kubernetes client: %v", err)
 	}
 
 	tlsEnabled := cfg.CertFile != "" && cfg.PrivateKeyFile != ""
@@ -102,15 +153,25 @@ func Start(cfg *Config) {
 		httpServer.Handler = loggedRouter
 	}
 
-	if tlsEnabled {
-		log.Infof("listening on https://:%d", cfg.Port)
-		logrus.SetLevel(logrusLevel)
-		panic(httpServer.ListenAndServeTLS(cfg.CertFile, cfg.PrivateKeyFile))
-	} else {
-		log.Infof("listening on http://:%d", cfg.Port)
-		logrus.SetLevel(logrusLevel)
-		panic(httpServer.ListenAndServe())
-	}
+	go func() {
+		watchSecrets(clientset)
+		fmt.Printf("watchSecrets starting...")
+	}()
+
+	go func() {
+		if tlsEnabled {
+			log.Infof("listening on https://:%d", cfg.Port)
+			logrus.SetLevel(logrusLevel)
+			panic(httpServer.ListenAndServeTLS(cfg.CertFile, cfg.PrivateKeyFile))
+		} else {
+			log.Infof("listening on http://:%d", cfg.Port)
+			logrus.SetLevel(logrusLevel)
+			panic(httpServer.ListenAndServe())
+		}
+	}()
+
+	select {}
+
 }
 
 func setupRoutes(cfg *Config) (*mux.Router, *PluginConfig) {
