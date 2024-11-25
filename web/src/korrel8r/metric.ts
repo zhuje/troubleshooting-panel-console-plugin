@@ -14,7 +14,7 @@ export class MetricNode extends Korrel8rNode {
   static fromURL(url: string): Korrel8rNode {
     const [, params] = parseURL('metric', 'monitoring/query-browser', url);
     const promqlQuery = params.get('query0');
-    if (!promqlQuery) throw new NodeError('Invalid metric URL: ${url}');
+    if (!promqlQuery) throw new NodeError(`Invalid metric URL: ${url}`);
     const query = `metric:metric:${promqlQuery}`;
 
     return new MetricNode(url, query);
