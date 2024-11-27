@@ -58,7 +58,7 @@ helm upgrade -i troubleshooting-panel-console-plugin charts/openshift-console-pl
 1. [npm](https://docs.npmjs.com/downloading-and-installing-node-js-and-npm)
 2. [oc](https://mirror.openshift.com/pub/openshift-v4/clients/oc/4.4/)
 3. [podman 3.2.0+](https://podman.io) or [Docker](https://www.docker.com)
-4. An OpenShift 4.16 cluster
+4. An OpenShift 4.16+ cluster
 5. [Korrel8r](https://korrel8r.github.io/korrel8r) instance running in the cluster.
 
 #### TP (Troubleshooting Panel) Development Server
@@ -69,18 +69,20 @@ The development server of the troubleshooting panel can either be ran as a nodej
 
 In one terminal window, run:
 
-1. `make install-frontend`
-2. `make start-frontend`
+1. `oc login` (requires [oc](https://console.redhat.com/openshift/downloads) and an [OpenShift cluster](https://console.redhat.com/openshift/create))
+2. `make install-frontend`
+3. `make start-frontend`
    The plugin HTTP server runs on port 9002 with CORS enabled.
 
 ##### Go Server
 
 In one terminal window, run:
 
-1. `make build-frontend`
-2. `make start-backend`
+1. `oc login` (requires [oc](https://console.redhat.com/openshift/downloads) and an [OpenShift cluster](https://console.redhat.com/openshift/create))
+2. `make build-frontend`
+3. `make start-backend`
    Or for hot reloading of the go backend you can use [gow](https://github.com/mitranim/gow)
-3. `gow run ./cmd/plugin-backend.go -port='9002' -config-path='./web/dist' -static-path='./web/dist'`
+4. `gow run ./cmd/plugin-backend.go -port='9002' -config-path='./web/dist' -static-path='./web/dist'`
    Gow will restart when any changes are saved to go files in any subdirectories.
 
 #### Monitoring Plugin Development Server
@@ -89,13 +91,13 @@ In another terminal window:
 Clone https://github.com/openshift/monitoring-plugin into a new directory.
 Then run:
 
-1. `yarn install`
-2. `yarn run start`
+1. `make install`
+2. `make start-frontend`
    The plugin HTTP server runs on port 9001 with CORS enabled.
 
 #### Connect to Korrel8r
 
-##### Setting up Korrel8r
+##### Setting up Korrel8r [OUTDATED]
 
 The following steps are suggested for setting up Korrel8r within your cluster to test the plugin. These steps are accurate as of the time of writing, and both Korrel8r and this plugin are subject to change.
 
@@ -105,13 +107,6 @@ The following steps are suggested for setting up Korrel8r within your cluster to
 4. Run `make resources`
 5. Install the **korrel8r** operator into your cluster
 6. Create a `korrel8r` namespace in your cluster
-   a. If installing in 4.15 or later, there is a permission issue which can be tracked here: https://issues.redhat.com/browse/OU-304. To solve this follow the instructions detailed in the [docs](https://korrel8r.github.io/korrel8r/#troubleshooting-ocp-415-errors)
-
-```bash
-kubectl label ns/korrel8r pod-security.kubernetes.io/enforce=privileged --overwrite
-kubectl label ns/korrel8r pod-security.kubernetes.io/warn=privileged --overwrite
-```
-
 7. Create a korrel8r instance in the `korrel8r` namespace with the name `korrel8r`
 8. Follow the instructions [here](https://korrel8r.github.io/korrel8r/#troubleshooting-no-related-logs) to create a failing deployment to create alerts which link to other items using korrel8r
 
@@ -127,8 +122,7 @@ In a another terminal window, run:
 
 In another terminal window, run:
 
-1. `oc login` (requires [oc](https://console.redhat.com/openshift/downloads) and an [OpenShift cluster](https://console.redhat.com/openshift/create))
-2. `npm run start-console` (requires [Docker](https://www.docker.com) or [podman 3.2.0+](https://podman.io))
+1. `make start-console` (requires [Docker](https://www.docker.com) or [podman 3.2.0+](https://podman.io))
 
 This will run the OpenShift console in a container connected to the cluster
 you've logged into. Navigate to <http://localhost:9000/observe/alerts> and select an alert to see the running plugin.
@@ -198,4 +192,4 @@ break console styles!
 
 ### Local Development Troubleshooting
 1. Disable cache. Select 'disable cache' in your browser's DevTools > Network > 'disable cache'. Or use private/incognito mode in your browser.
-2. Enable higher log verbosity by setting `-log-level=trace` when starting the plugin backend. For more options to set log level see [logrus documentation](https://github.com/sirupsen/logrus?tab=readme-ov-file#level-logging). 
+2. Enable higher log verbosity by setting `-log-level=trace` when starting the plugin backend. For more options to set log level see [logrus documentation](https://github.com/sirupsen/logrus?tab=readme-ov-file#level-logging).
