@@ -6,6 +6,7 @@ import { LogNode } from './log';
 import { MetricNode } from './metric';
 import { NetflowNode } from './netflow';
 import { TraceNode } from './trace';
+import { Constraint } from '../redux-actions';
 
 const urlLookup = [
   AlertNode.fromURL,
@@ -39,9 +40,9 @@ export class Korrel8rNodeFactory {
     return InvalidNode.fromURL(url);
   }
 
-  static fromQuery(query: string): Korrel8rNode {
+  static fromQuery(query: string, constraint?: Constraint): Korrel8rNode {
     const fromQuery = queryLookup[query.split(':').at(0)];
-    if (fromQuery) return fromQuery(query);
+    if (fromQuery) return fromQuery(query, constraint);
     return InvalidNode.fromQuery(query);
   }
 }
