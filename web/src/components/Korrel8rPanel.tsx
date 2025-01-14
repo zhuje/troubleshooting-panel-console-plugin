@@ -18,6 +18,7 @@ import {
 } from '@patternfly/react-core';
 import { CubesIcon, ExclamationCircleIcon } from '@patternfly/react-icons';
 import * as React from 'react';
+import DateTimeRangePicker from './DateTimeRangePicker';
 import { TFunction, useTranslation } from 'react-i18next';
 import { useDispatch, useSelector } from 'react-redux';
 import { usePluginAvailable } from '../hooks/usePluginAvailable';
@@ -43,6 +44,10 @@ const focusQuery = (urlQuery: string): Query => {
     queryType: QueryType.Neighbour,
     depth: 3,
     goal: null,
+    constraint: {
+      start: null, // Initially null
+      end: null, // Initially null
+    },
   };
 };
 
@@ -104,6 +109,32 @@ export default function Korrel8rPanel() {
   const queryInputID = 'query-input';
   const queryTypeOptions = 'query-type-options';
 
+  // Handler for both 'start' and 'end' date/time changes
+  const handleDateChange = (
+    type: 'start' | 'end',
+    newDate: Date,
+    hour?: number,
+    minute?: number,
+  ): void => {
+    // Adjust time if hour and minute are provided
+    const updatedDate = new Date(newDate);
+    if (hour !== undefined && minute !== undefined) {
+      updatedDate.setHours(hour);
+      updatedDate.setMinutes(minute);
+    }
+
+    // Update the constraint based on 'start' or 'end' type
+    const updatedQuery = {
+      ...query,
+      constraint: {
+        ...query.constraint,
+        [type]: updatedDate.toISOString(), // Update the corresponding date in query
+      },
+    };
+
+    setQuery(updatedQuery); // Update the query state with the new object
+  };
+
   const focusTip = korrel8rQueryFromURL
     ? t('Re-calculate the correlation graph starting from resources on the current console page.')
     : cannotFocus;
@@ -149,7 +180,18 @@ export default function Korrel8rPanel() {
         isDetached
         isIndented
       >
-        <Flex direction={{ default: 'column' }}>
+        {/* DateTimeRangePicker section with both date and time */}
+        <Flex>
+          <FlexItem>
+            <h3>{t('Select Date and Time Range')}</h3>
+            <DateTimeRangePicker
+              // Pass the start date/time
+              from={query.constraint?.start ? new Date(query.constraint.start) : null}
+              // Pass the end date/time
+              to={query.constraint?.end ? new Date(query.constraint.end) : null}
+              onDateChange={handleDateChange} // Unified handler for both date and time changes
+            />
+          </FlexItem>
           <Tooltip content={t('Korrel8 query selecting the starting points for correlation.')}>
             <TextArea
               className="tp-plugin__panel-query-input"

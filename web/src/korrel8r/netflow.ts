@@ -1,5 +1,7 @@
 import { Korrel8rNode, NodeError } from './korrel8r.types';
 import { parseQuery, parseURL } from './query-url';
+import { Constraint } from '../redux-actions';
+import { rfc5399ToUnixTimestamp } from '../korrel8r-utils';
 
 // https://docs.openshift.com/container-platform/4.15/observability/network_observability/json-flows-format-reference.html
 // Netflow URL parameter names are equivalent to the LogQL query labels, but spelled differently.
@@ -56,7 +58,7 @@ export class NetflowNode extends Korrel8rNode {
     return new NetflowNode(url, `netflow:network:{${finalSelectors}}`);
   }
 
-  static fromQuery(query: string): Korrel8rNode {
+  static fromQuery(query: string, constraint?: Constraint): Korrel8rNode {
     const [clazz, data] = parseQuery('netflow', query);
     if (clazz !== 'network')
       throw new NodeError(`Expected class netflow:network in query: ${query}`);
@@ -71,10 +73,22 @@ export class NetflowNode extends Korrel8rNode {
       })
       .filter((s) => s)
       .join(';');
-    return new NetflowNode(
-      `netflow-traffic?tenant=${clazz}${filters ? `&filters=${encodeURIComponent(filters)}` : ''}`,
-      query,
-    );
+
+    // Construct the base URL with required parameters
+    let url = `netflow-traffic?tenant=${clazz}${
+      filters ? `&filters=${encodeURIComponent(filters)}` : ''
+    }`;
+
+    // Add the start and end time to the URL
+    if (constraint.start !== null) {
+      const starttime = rfc5399ToUnixTimestamp(constraint.start);
+      url += `&startTime=${encodeURIComponent(starttime)}`;
+    }
+    if (constraint.end !== null) {
+      const endtime = rfc5399ToUnixTimestamp(constraint.end);
+      url += `&endTime=${encodeURIComponent(endtime)}`;
+    }
+    return new NetflowNode(url, query);
   }
 
   toURL(): string {

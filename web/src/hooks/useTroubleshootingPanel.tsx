@@ -20,6 +20,7 @@ const useTroubleshootingPanel: ExtensionHook<Array<Action>> = () => {
         queryType: QueryType.Neighbour,
         depth: 3,
         goal: null,
+        constraint: null,
       }),
     );
     dispatch(openTP());

@@ -1,3 +1,5 @@
+import { Constraint } from '../redux-actions';
+
 export enum Korrel8rDomain {
   Netflow = 'netflow',
   Metric = 'metric',
@@ -9,7 +11,7 @@ export enum Korrel8rDomain {
 
 export abstract class Korrel8rNode {
   static fromURL: (url: string) => Korrel8rNode;
-  static fromQuery: (query: string) => Korrel8rNode;
+  static fromQuery: (query: string, constraint?: Constraint) => Korrel8rNode;
   abstract toURL(): string;
   abstract toQuery(): string;
 }

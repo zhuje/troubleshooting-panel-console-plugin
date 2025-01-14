@@ -19,11 +19,14 @@ export const getNeighborsGraph = (query: Query) => {
     body: JSON.stringify({
       start: {
         queries: query.query ? [query.query.trim()] : [],
+        constraint: {
+          start: query.constraint?.start,
+          end: query.constraint?.end,
+        },
       },
       depth: query.depth,
     }),
   };
-
   return cancellableFetch<Korrel8rGraphResponse>(
     `${KORREL8R_ENDPOINT}/api/v1alpha1/graphs/neighbours`,
     requestData,
@@ -36,6 +39,10 @@ export const getGoalsGraph = (query: Query) => {
     body: JSON.stringify({
       start: {
         queries: query.query ? [query.query.trim()] : [],
+        constraint: {
+          start: query.constraint?.start,
+          end: query.constraint?.end,
+        },
       },
       goals: [query.goal],
     }),
