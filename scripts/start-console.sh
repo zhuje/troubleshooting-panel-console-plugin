@@ -30,24 +30,32 @@ echo "Console Image: $CONSOLE_IMAGE"
 echo "Console URL: http://localhost:${CONSOLE_PORT}"
 echo "Console Platform: $CONSOLE_IMAGE_PLATFORM"
 
+
+function bridge_vars_env {
+    # Originally, (set | grep BRIDGE) was used, but it doesn't escape BRIDGE_PLUGIN_PROXY properly.
+    # We use "${!var}" to get the variable value by dynamic name.
+    for var in $(set | grep ^BRIDGE | sed 's/=.*//'); do
+        printf "%s=%s\n" "$var" "${!var}"
+    done
+}
+
 # Prefer podman if installed. Otherwise, fall back to docker.
 if [ -x "$(command -v podman)" ]; then
     if [ "$(uname -s)" = "Linux" ]; then
         # Use host networking on Linux since host.containers.internal is unreachable in some environments.
         BRIDGE_PLUGINS="troubleshooting-panel-console-plugin=http://localhost:9002,monitoring-plugin=http://localhost:9001"
         BRIDGE_PLUGIN_PROXY="{\"services\": [{\"consoleAPIPath\": \"/api/proxy/plugin/${npm_package_consolePlugin_name}/korrel8r/\", \"endpoint\":\"https://localhost:9005\",\"authorize\":true}]}"
-        podman run --pull always --platform $CONSOLE_IMAGE_PLATFORM --rm --network=host --env-file <(set | grep BRIDGE) $CONSOLE_IMAGE
+        podman run --pull always --platform $CONSOLE_IMAGE_PLATFORM --rm --network=host --env-file <(bridge_vars_env) $CONSOLE_IMAGE
     else
         BRIDGE_PLUGINS="troubleshooting-panel-console-plugin=http://host.containers.internal:9002,monitoring-plugin=http://host.containers.internal:9001"
         BRIDGE_PLUGIN_PROXY="{\"services\": [{\"consoleAPIPath\": \"/api/proxy/plugin/${npm_package_consolePlugin_name}/korrel8r/\", \"endpoint\":\"https://host.containers.internal:9005\",\"authorize\":true}]}"
         podman run --pull always --platform $CONSOLE_IMAGE_PLATFORM \
             --rm -p "$CONSOLE_PORT":9000 \
-            --env-file <(set | grep BRIDGE) \
-            --env BRIDGE_PLUGIN_PROXY='{"services": [{"consoleAPIPath": "/api/proxy/plugin/troubleshooting-panel-console-plugin/korrel8r/", "endpoint":"https://host.containers.internal:9005","authorize":true}]}' \
+            --env-file <(bridge_vars_env) \
             $CONSOLE_IMAGE
     fi
 else
     BRIDGE_PLUGINS="troubleshooting-panel-console-plugin=http://host.docker.internal:9002,monitoring-plugin=http://host.docker.internal:9001"
     BRIDGE_PLUGIN_PROXY="{\"services\": [{\"consoleAPIPath\": \"/api/proxy/plugin/${npm_package_consolePlugin_name}/korrel8r/\", \"endpoint\":\"https://host.docker.internal:9005\",\"authorize\":true}]}"
-    docker run --pull always --platform $CONSOLE_IMAGE_PLATFORM --rm -p "$CONSOLE_PORT":9000 --env-file <(set | grep BRIDGE) $CONSOLE_IMAGE
+    docker run --pull always --platform $CONSOLE_IMAGE_PLATFORM --rm -p "$CONSOLE_PORT":9000 --env-file <(bridge_vars_env) $CONSOLE_IMAGE
 fi
