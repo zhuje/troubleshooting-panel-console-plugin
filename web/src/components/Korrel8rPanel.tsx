@@ -24,15 +24,16 @@ import { useDispatch, useSelector } from 'react-redux';
 import { usePluginAvailable } from '../hooks/usePluginAvailable';
 import { useURLState } from '../hooks/useURLState';
 import { getGoalsGraph, getNeighborsGraph } from '../korrel8r-client';
-import { Korrel8rGraphResponse } from '../korrel8r/query.types';
+import { Graph } from '../korrel8r/client/models/Graph';
 import { Query, QueryType, setPersistedQuery } from '../redux-actions';
 import { State } from '../redux-reducers';
 import './korrel8rpanel.css';
 import { Korrel8rTopology } from './topology/Korrel8rTopology';
 import { LoadingTopology } from './topology/LoadingTopology';
+import { ApiError } from '../korrel8r/client';
 
 type Result = {
-  graph?: Korrel8rGraphResponse;
+  graph?: Graph;
   message?: string;
   title?: string;
   isError?: boolean;
@@ -80,28 +81,41 @@ export default function Korrel8rPanel() {
       return;
     }
     // Make the query request
-    const { request, abort } =
-      query.queryType === QueryType.Goal ? getGoalsGraph(query) : getNeighborsGraph(query);
-    request()
-      .then((response: Korrel8rGraphResponse) => {
+    const cancellableFetch =
+      query.queryType === QueryType.Goal
+        ? getGoalsGraph({
+            start: {
+              queries: query.query ? [query.query.trim()] : [],
+            },
+            goals: [query.goal],
+          })
+        : getNeighborsGraph({
+            start: {
+              queries: query.query ? [query.query.trim()] : [],
+            },
+            depth: query.depth,
+          });
+
+    cancellableFetch
+      .then((response: Graph) => {
         setResult({ graph: { nodes: response.nodes, edges: response.edges } });
         // Only set the persisted query upon a successful query. It would be a
         // poor feeling to create a query that fails, and then be forced to rerun it
         // when opening the panel later
         dispatch(setPersistedQuery(query));
       })
-      .catch((e: Error) => {
+      .catch((e: ApiError) => {
         try {
           setResult({
             isError: true,
-            message: JSON.parse(e.message).error,
+            message: JSON.parse(e.body).error,
             title: t('Korrel8r Error'),
           });
         } catch {
-          setResult({ isError: true, message: e.message, title: t('Request Failed') });
+          setResult({ isError: true, message: e.body, title: t('Request Failed') });
         }
       });
-    return abort;
+    return () => cancellableFetch.cancel();
   }, [result, t, dispatch, query, cannotFocus, korrel8rQueryFromURL]);
 
   const queryToggleID = 'query-toggle';

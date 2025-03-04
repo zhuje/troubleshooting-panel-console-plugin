@@ -62,3 +62,11 @@ deploy:	test-frontend		## Build and push image, reinstall on cluster using helm.
 	helm uninstall troubleshooting-panel-console-plugin -n troubleshooting-panel-console-plugin || true
 	PUSH=1 scripts/build-image.sh
 	helm install troubleshooting-panel-console-plugin charts/openshift-console-plugin -n troubleshooting-panel-console-plugin --create-namespace --set plugin.image=$(IMAGE)
+
+## Code generation
+gen-client: web/src/korrel8r/client
+
+# NOTE: copied from https://github.com/korrel8r/korrel8r/blob/main/pkg/rest/docs/swagger.json
+web/src/korrel8r/client: korrel8r/swagger.json
+	cd web && npx openapi-typescript-codegen --input ../$< --output ../$@ --name Korrel8rClient
+	@touch $@
