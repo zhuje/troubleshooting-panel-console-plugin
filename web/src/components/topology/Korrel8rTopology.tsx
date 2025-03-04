@@ -31,7 +31,8 @@ import { nodeToLabel } from '../../korrel8r-utils';
 import { InvalidNode } from '../../korrel8r/invalid';
 import { Korrel8rNode } from '../../korrel8r/korrel8r.types';
 import { Korrel8rNodeFactory } from '../../korrel8r/node-factory';
-import { QueryEdge, QueryNode } from '../../korrel8r/query.types';
+import { Edge as EdgeData } from '../../korrel8r/client/models/Edge';
+import { Node as NodeData } from '../../korrel8r/client/models/Node'; // FIXME use as Data
 import { Query, QueryType } from '../../redux-actions';
 import { useSelector } from 'react-redux';
 import { State } from '../../redux-reducers';
@@ -132,7 +133,7 @@ const getErrorTooltip = (t: TFunction, error?: NodeError): string => {
 };
 
 const getNodesFromQueryResponse = (
-  queryResponse: Array<QueryNode>,
+  queryResponse: Array<NodeData>,
   loggingAvailable: boolean,
   netobserveAvailable: boolean,
   t: TFunction,
@@ -181,7 +182,7 @@ const getNodesFromQueryResponse = (
 };
 
 const getEdgesFromQueryResponse = (
-  queryResponse: Array<QueryEdge>,
+  queryResponse: Array<EdgeData>,
   nodes: Array<GraphNode>,
 ): Array<GraphEdge> => {
   const edges: Array<GraphEdge> = [];
@@ -204,8 +205,8 @@ const getEdgesFromQueryResponse = (
 };
 
 export const Korrel8rTopology: React.FC<{
-  queryNodes: Array<QueryNode>;
-  queryEdges: Array<QueryEdge>;
+  queryNodes: Array<NodeData>;
+  queryEdges: Array<EdgeData>;
   loggingAvailable: boolean;
   netobserveAvailable: boolean;
   setQuery: (query: Query) => void;
