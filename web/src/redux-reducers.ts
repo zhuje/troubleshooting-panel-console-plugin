@@ -20,6 +20,10 @@ const reducer = (state: TPState, action: TPAction): TPState => {
         queryType: QueryType.Neighbour,
         depth: 3,
         goal: null,
+        constraint: {
+          start: null, // Initially null
+          end: null, // Initially null
+        },
       },
     });
   }

@@ -6,6 +6,10 @@ export enum ActionType {
   SetPersistedQuery = 'setPersistedQuery',
 }
 
+export type Constraint = {
+  start: null | string;
+  end: null | string;
+};
 export enum QueryType {
   Neighbour,
   Goal,
@@ -15,6 +19,7 @@ export type Query = {
   queryType: QueryType;
   depth: null | number;
   goal: null | string;
+  constraint: Constraint;
 };
 
 export const closeTP = () => action(ActionType.CloseTroubleshootingPanel);
