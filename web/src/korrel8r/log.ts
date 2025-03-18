@@ -1,5 +1,7 @@
 import { Korrel8rNode, NodeError } from './korrel8r.types';
 import { parseQuery, parseURL } from './query-url';
+import { Constraint } from '../redux-actions';
+import { rfc5399ToUnixTimestamp } from '../korrel8r-utils';
 
 enum LogClass {
   application = 'application',
@@ -44,15 +46,24 @@ export class LogNode extends Korrel8rNode {
     return new LogNode(url, `log:${logClass}:${logQL}`, logClass);
   }
 
-  static fromQuery(query: string): Korrel8rNode {
+  static fromQuery(query: string, constraint?: Constraint): Korrel8rNode {
     const [clazz, logQL] = parseQuery('log', query);
     const logClass = LogClass[clazz as keyof typeof LogClass];
     if (!logClass) throw new NodeError(`Expected log class in query: ${query}`);
-    return new LogNode(
-      `monitoring/logs?q=${encodeURIComponent(`${logQL}`)}&tenant=${logClass}`,
-      query,
-      logClass,
-    );
+    // Initialize the query URL with the basic information
+    let logNodeQuery = `monitoring/logs?q=${encodeURIComponent(logQL)}&tenant=${logClass}`;
+
+    // Append 'start' and 'end' to the query if they are not null
+    if (constraint.start) {
+      const starttime = rfc5399ToUnixTimestamp(constraint.start);
+      logNodeQuery += `&start=${encodeURIComponent(starttime * 1000)}`;
+    }
+    if (constraint.end) {
+      const endtime = rfc5399ToUnixTimestamp(constraint.end);
+      logNodeQuery += `&end=${encodeURIComponent(endtime * 1000)}`;
+    }
+    // Return the LogNode with the modified query
+    return new LogNode(logNodeQuery, query, logClass);
   }
 
   toURL(): string {

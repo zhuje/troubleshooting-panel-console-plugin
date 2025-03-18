@@ -33,6 +33,8 @@ import { Korrel8rNode } from '../../korrel8r/korrel8r.types';
 import { Korrel8rNodeFactory } from '../../korrel8r/node-factory';
 import { QueryEdge, QueryNode } from '../../korrel8r/query.types';
 import { Query, QueryType } from '../../redux-actions';
+import { useSelector } from 'react-redux';
+import { State } from '../../redux-reducers';
 import './korrel8rtopology.css';
 
 interface Korrel8rTopologyNodeProps {
@@ -134,6 +136,7 @@ const getNodesFromQueryResponse = (
   loggingAvailable: boolean,
   netobserveAvailable: boolean,
   t: TFunction,
+  persistedQuery: Query,
 ): Array<GraphNode> => {
   const nodes: Array<GraphNode> = [];
   queryResponse.forEach((node) => {
@@ -141,7 +144,10 @@ const getNodesFromQueryResponse = (
     let error: NodeError;
 
     try {
-      korrel8rNode = Korrel8rNodeFactory.fromQuery(node.queries.at(0)?.query);
+      korrel8rNode = Korrel8rNodeFactory.fromQuery(
+        node.queries.at(0)?.query,
+        persistedQuery?.constraint,
+      );
     } catch (e) {
       korrel8rNode = InvalidNode.fromQuery(node.queries.at(0)?.query);
       // eslint-disable-next-line no-console
@@ -207,10 +213,20 @@ export const Korrel8rTopology: React.FC<{
   const { t } = useTranslation('plugin__troubleshooting-panel-console-plugin');
   const location = useLocation();
   const history = useHistory();
+  const persistedQuery = useSelector((state: State) => {
+    return state.plugins?.tp?.get('persistedQuery');
+  }) as Query;
 
   const nodes = React.useMemo(
-    () => getNodesFromQueryResponse(queryNodes, loggingAvailable, netobserveAvailable, t),
-    [queryNodes, loggingAvailable, netobserveAvailable, t],
+    () =>
+      getNodesFromQueryResponse(
+        queryNodes,
+        loggingAvailable,
+        netobserveAvailable,
+        t,
+        persistedQuery,
+      ),
+    [queryNodes, loggingAvailable, netobserveAvailable, t, persistedQuery],
   );
   const edges = React.useMemo(
     () => getEdgesFromQueryResponse(queryEdges, nodes),
@@ -254,10 +270,11 @@ export const Korrel8rTopology: React.FC<{
         queryType: QueryType.Neighbour,
         depth: 3,
         goal: null,
+        constraint: persistedQuery.constraint,
       });
       history.push('/' + korrel8rNode.toURL());
     },
-    [history, nodes, selectedIds, setQuery],
+    [history, nodes, selectedIds, setQuery, persistedQuery],
   );
 
   const controller = React.useMemo(() => {

@@ -31,3 +31,8 @@ export const nodeToLabel = (node: QueryNode): string => {
       return `${node.class} (${node.count})`;
   }
 };
+
+export const rfc5399ToUnixTimestamp = (rfc5399String) => {
+  const date = new Date(rfc5399String); // Parse RFC 5399 (ISO 8601) string into Date object
+  return Math.floor(date.getTime() / 1000); // Convert milliseconds to seconds
+};
