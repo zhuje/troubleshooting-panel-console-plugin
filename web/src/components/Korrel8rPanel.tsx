@@ -25,7 +25,7 @@ import { usePluginAvailable } from '../hooks/usePluginAvailable';
 import { useURLState } from '../hooks/useURLState';
 import { getGoalsGraph, getNeighborsGraph } from '../korrel8r-client';
 import { Graph } from '../korrel8r/client/models/Graph';
-import { Query, QueryType, setPersistedQuery } from '../redux-actions';
+import { Constraint, Query, QueryType, setPersistedQuery } from '../redux-actions';
 import { State } from '../redux-reducers';
 import './korrel8rpanel.css';
 import { Korrel8rTopology } from './topology/Korrel8rTopology';
@@ -39,16 +39,16 @@ type Result = {
   isError?: boolean;
 };
 
-const focusQuery = (urlQuery: string): Query => {
+const focusQuery = (
+  urlQuery: string,
+  constraint: Constraint = { start: null, end: null },
+): Query => {
   return {
     query: urlQuery,
     queryType: QueryType.Neighbour,
     depth: 3,
     goal: null,
-    constraint: {
-      start: null, // Initially null
-      end: null, // Initially null
-    },
+    constraint: constraint,
   };
 };
 
@@ -171,7 +171,7 @@ export default function Korrel8rPanel() {
         <Tooltip content={focusTip}>
           <Button
             isAriaDisabled={!korrel8rQueryFromURL}
-            onClick={() => runQuery(focusQuery(korrel8rQueryFromURL))}
+            onClick={() => runQuery(focusQuery(korrel8rQueryFromURL, persistedQuery.constraint))}
           >
             {t('Focus')}
           </Button>
