@@ -2,7 +2,7 @@
   position: fixed;
   top: 0;
   right: 0;
-  z-index: 98;
+  z-index: 1050;
   bottom: 0;
   overflow: hidden;
   background-color: var(--pf-v5-global--BackgroundColor--100);
