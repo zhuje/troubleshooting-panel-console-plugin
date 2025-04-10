@@ -28,6 +28,7 @@ export class AlertNode extends Korrel8rNode {
       selectors = parseKeyValueList(params.get('alerts'));
     } else {
       params.delete('prometheus'); // Not part of the label selectors.
+      params.delete('managed_cluster'); // Not part of the label selectors.
       for (const [key, value] of params) selectors[key] = value;
     }
     return new AlertNode(url, `alert:alert:${JSON.stringify(selectors)}`);
