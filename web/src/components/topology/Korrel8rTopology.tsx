@@ -26,7 +26,7 @@ import {
 } from '@patternfly/react-topology';
 import * as React from 'react';
 import { TFunction, useTranslation } from 'react-i18next';
-import { useHistory, useLocation } from 'react-router';
+import { useNavigate, useLocation } from 'react-router-dom-v5-compat';
 import { nodeToLabel } from '../../korrel8r-utils';
 import { InvalidNode } from '../../korrel8r/invalid';
 import { Korrel8rNode } from '../../korrel8r/korrel8r.types';
@@ -213,7 +213,7 @@ export const Korrel8rTopology: React.FC<{
 }> = ({ queryNodes, queryEdges, loggingAvailable, netobserveAvailable, setQuery }) => {
   const { t } = useTranslation('plugin__troubleshooting-panel-console-plugin');
   const location = useLocation();
-  const history = useHistory();
+  const navigate = useNavigate();
   const persistedQuery = useSelector((state: State) => {
     return state.plugins?.tp?.get('persistedQuery');
   }) as Query;
@@ -273,9 +273,9 @@ export const Korrel8rTopology: React.FC<{
         goal: null,
         constraint: persistedQuery.constraint,
       });
-      history.push('/' + korrel8rNode.toURL());
+      navigate('/' + korrel8rNode.toURL());
     },
-    [history, nodes, selectedIds, setQuery, persistedQuery],
+    [navigate, nodes, selectedIds, setQuery, persistedQuery],
   );
 
   const controller = React.useMemo(() => {
