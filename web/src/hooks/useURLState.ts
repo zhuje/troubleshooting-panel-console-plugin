@@ -1,7 +1,7 @@
 import * as React from 'react';
 import { useQueryParams } from './useQueryParams';
 import { Korrel8rNodeFactory } from '../korrel8r/node-factory';
-import { useLocation } from 'react-router';
+import { useLocation } from 'react-router-dom-v5-compat';
 
 export type QueryParams = [string, string][];
 
