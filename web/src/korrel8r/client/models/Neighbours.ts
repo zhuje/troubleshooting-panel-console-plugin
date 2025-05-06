@@ -7,10 +7,10 @@ import type { Start } from './Start';
  * Starting point for a neighbours search.
  */
 export type Neighbours = {
-    /**
-     * Max depth of neighbours graph.
-     */
-    depth?: number;
-    start?: Start;
+  /**
+   * Max depth of neighbours graph.
+   */
+  depth?: number;
+  start?: Start;
 };
 

@@ -7,13 +7,13 @@ import type { Store } from './Store';
  * Domain configuration information.
  */
 export type Domain = {
-    /**
-     * Name of the domain.
-     */
-    name?: string;
-    /**
-     * Stores configured for the domain.
-     */
-    stores?: Array<Store>;
+  /**
+   * Name of the domain.
+   */
+  name?: string;
+  /**
+   * Stores configured for the domain.
+   */
+  stores?: Array<Store>;
 };
 
