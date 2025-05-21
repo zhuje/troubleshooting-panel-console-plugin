@@ -1,16 +1,21 @@
+import { Badge } from '@patternfly/react-core';
 import { ClusterIcon } from '@patternfly/react-icons';
 import {
   action,
+  BadgeLocation,
   BreadthFirstLayout,
   ComponentFactory,
+  ContextMenuItem,
   createTopologyControlButtons,
   defaultControlButtonsOptions,
   DefaultEdge,
   DefaultGroup,
   DefaultNode,
   EdgeStyle,
+  ElementModel,
   Graph,
   GraphComponent,
+  GraphElement,
   Model,
   ModelKind,
   Node,
@@ -21,101 +26,85 @@ import {
   Visualization,
   VisualizationProvider,
   VisualizationSurface,
+  withContextMenu,
+  WithContextMenuProps,
   withPanZoom,
   withSelection,
+  WithSelectionProps,
 } from '@patternfly/react-topology';
 import * as React from 'react';
 import { useTranslation } from 'react-i18next';
-import { useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom-v5-compat';
 import { allDomains } from '../../korrel8r/all-domains';
 import * as korrel8r from '../../korrel8r/types';
-import { Search, SearchType } from '../../redux-actions';
-import { State } from '../../redux-reducers';
 import './korrel8rtopology.css';
 
-interface Korrel8rTopologyNodeProps {
-  element: Node;
-  onSelect: () => void;
-  selected: boolean;
-}
-
-export enum NodeError {
-  invalid = 'invalid',
-  log = 'log',
-  netflow = 'netflow',
-}
-
-const Korrel8rTopologyNode: React.FC<Korrel8rTopologyNodeProps> = ({
-  element,
-  selected,
-  onSelect,
-}) => {
-  if (element.getData().tooltip) {
-    return (
-      <g opacity="0.7" className="tp-plugin__topology_invalid_node">
-        <title>{element.getData().error}</title>
-        <DefaultNode element={element} selected={selected} onSelect={onSelect} hover={false}>
-          <g transform={`translate(25, 25)`}>
-            <ClusterIcon style={{ color: '#393F44' }} width={25} height={25} />
-          </g>
-        </DefaultNode>
-      </g>
-    );
-  }
-
-  return (
-    <DefaultNode element={element} selected={selected} onSelect={onSelect}>
-      <g transform={`translate(25, 25)`}>
-        <ClusterIcon style={{ color: '#393F44' }} width={25} height={25} />
-      </g>
-    </DefaultNode>
-  );
-};
-
-const baselineComponentFactory: ComponentFactory = (kind: ModelKind, type: string) => {
-  switch (type) {
-    case 'group':
-      return DefaultGroup;
-    default:
-      switch (kind) {
-        case ModelKind.graph:
-          return withPanZoom()(GraphComponent);
-        case ModelKind.node:
-          return withSelection()(Korrel8rTopologyNode);
-        case ModelKind.edge:
-          return DefaultEdge;
-        default:
-          return undefined;
-      }
-  }
-};
-
-const NODE_SHAPE = NodeShape.ellipse;
-const NODE_DIAMETER = 75;
+const capitalize = (s: string) => (s ? s[0].toUpperCase() + s.slice(1) : '');
 
 const nodeLabel = (node: korrel8r.Node): string => {
   const c = node.class;
-  if (!c) return `[${node.api.class}]`; // Original un-parsed class name.
+  if (!c) return `[${node.id}]`; // Original un-parsed class name.
   if (c.domain === c.name) return capitalize(c.domain);
   let name = c.name;
   if (c.domain === 'k8s') name = c.name.match(/^[^.]+/)?.[0] || name; // Kind without version
   return `${capitalize(c.domain)} ${capitalize(name)} `;
 };
 
-const capitalize = (s: string) => (s ? s[0].toUpperCase() + s.slice(1) : '');
+const nodeBadge = (node: korrel8r.Node): string => {
+  const queries = nodeQueries(node);
+  return `${queries.length > 1 ? `${queries[0]?.count}/` : ''}${node?.count ?? '?'}`;
+};
+
+const nodeQueries = (node: korrel8r.Node) => node?.queries ?? [];
+
+interface Korrel8rTopologyNodeProps {
+  element: Node;
+}
+
+const Korrel8rTopologyNode: React.FC<
+  Korrel8rTopologyNodeProps & WithContextMenuProps & WithSelectionProps
+> = ({ element, onSelect, selected, onContextMenu, contextMenuOpen }) => {
+  const node = element.getData();
+  const topologyNode = (
+    <DefaultNode
+      element={element}
+      onSelect={onSelect}
+      selected={selected}
+      onContextMenu={onContextMenu}
+      contextMenuOpen={contextMenuOpen}
+      hover={false}
+      label={nodeLabel(node)}
+      badge={nodeBadge(node)}
+      badgeLocation={BadgeLocation.below}
+    >
+      <g transform={`translate(25, 25)`}>
+        <ClusterIcon style={{ color: '#393F44' }} width={25} height={25} />
+      </g>
+    </DefaultNode>
+  );
+  if (node.error) {
+    // Gray out, add error tool tip
+    return (
+      <g opacity="0.7" className="tp-plugin__topology_invalid_node">
+        <title>{node.error}</title>){topologyNode}
+      </g>
+    );
+  }
+  return topologyNode;
+};
+
+const NODE_SHAPE = NodeShape.ellipse;
+const NODE_DIAMETER = 75;
+const PADDING = 30;
 
 export const Korrel8rTopology: React.FC<{
   graph: korrel8r.Graph;
   loggingAvailable: boolean;
   netobserveAvailable: boolean;
-  setSearch: (search: Search) => void;
-}> = ({ graph, loggingAvailable, netobserveAvailable, setSearch }) => {
+}> = ({ graph, loggingAvailable, netobserveAvailable }) => {
   const { t } = useTranslation('plugin__troubleshooting-panel-console-plugin');
   const navigate = useNavigate();
-  const persistedSearch = useSelector((state: State) =>
-    state.plugins?.tp?.get('persistedSearch'),
-  ) as Search;
+  const [selectedIds, setSelectedIds] = React.useState<string[]>([]);
 
   const nodes = React.useMemo(
     () =>
@@ -132,7 +121,6 @@ export const Korrel8rTopology: React.FC<{
         return {
           id: node.id,
           type: 'node',
-          label: `${nodeLabel(node)} (${node.api.count})`,
           width: NODE_DIAMETER,
           height: NODE_DIAMETER,
           shape: NODE_SHAPE,
@@ -156,28 +144,63 @@ export const Korrel8rTopology: React.FC<{
     [graph],
   );
 
+  const navigateToQuery = React.useCallback(
+    (query: korrel8r.Query) => {
+      try {
+        navigate('/' + allDomains.queryToLink(query));
+      } catch (e) {
+        // eslint-disable-next-line no-console
+        console.error(`navigateToQuery failed for: ${query.toString()}: `, e);
+      }
+    },
+    [navigate],
+  );
+
   const selectionAction = React.useCallback(
     (selected: Array<string>) => {
       const id = selected?.[0]; // Select only one at a time.
+      setSelectedIds([id]);
       const node = graph.node(id);
       if (!node || node.error) return;
-      const qc = node.queries?.[0];
-      try {
-        const link = allDomains.queryToLink(qc.query); // FIXME error
-        setSearch({
-          queryStr: qc.query.toString(),
-          type: SearchType.Neighbour,
-          depth: 3,
-          goal: null,
-          constraint: persistedSearch.constraint,
-        });
-        navigate('/' + link);
-      } catch (e) {
-        // eslint-disable-next-line no-console
-        console.error('queryToLink failed: ', e);
+      navigateToQuery(node.queries?.[0]?.query);
+    },
+    [graph, navigateToQuery, setSelectedIds],
+  );
+
+  const nodeMenu = React.useCallback(
+    (e: GraphElement<ElementModel, korrel8r.Node>): React.ReactElement[] => {
+      const node = e.getData();
+      return nodeQueries(node).map((qc) => (
+        <ContextMenuItem
+          key={qc.query.toString()}
+          onClick={() => {
+            navigateToQuery(qc.query);
+            setSelectedIds([node.id]);
+            navigator.clipboard.writeText(qc.query.toString());
+          }}
+        >
+          <Badge>{`${qc.count}`}</Badge> {`${qc.query.selector}`}
+        </ContextMenuItem>
+      ));
+    },
+    [navigateToQuery, setSelectedIds],
+  );
+
+  const componentFactory: ComponentFactory = React.useCallback(
+    (kind: ModelKind, type: string) => {
+      if (type === 'group') return DefaultGroup;
+      switch (kind) {
+        case ModelKind.graph:
+          return withPanZoom()(GraphComponent);
+        case ModelKind.node:
+          return withContextMenu(nodeMenu)(withSelection()(Korrel8rTopologyNode));
+        case ModelKind.edge:
+          return DefaultEdge;
+        default:
+          return undefined;
       }
     },
-    [graph, navigate, setSearch, persistedSearch],
+    [nodeMenu],
   );
 
   const controller = React.useMemo(() => {
@@ -191,22 +214,21 @@ export const Korrel8rTopology: React.FC<{
       },
     };
 
-    const newController = new Visualization();
-    newController.registerLayoutFactory((_, graph: Graph) => new BreadthFirstLayout(graph));
-    newController.registerComponentFactory(baselineComponentFactory);
-
-    newController.fromModel(model, false);
-    return newController;
+    const controller = new Visualization();
+    controller.registerLayoutFactory((_, graph: Graph) => new BreadthFirstLayout(graph));
+    controller.fromModel(model, false);
+    return controller;
   }, [nodes, edges]);
 
-  const eventController = React.useMemo(() => {
+  // NOTE: For some reason, the controller function above cannot depend on memoized functions
+  // like selectionAction or componentfactory. Using a separate memo works. Strange.
+  // The Visualization below must depend on controller 2.
+  const controller2 = React.useMemo(() => {
     controller.addEventListener(SELECTION_EVENT, selectionAction);
-    setTimeout(() => {
-      // Center the graph on the next render tick once the graph elements have been sized and placed
-      controller.getGraph().fit(30);
-    }, 100); // FIXME this timeout is racy, need to reliably centre graph after layout is done.
+    controller.registerComponentFactory(componentFactory);
+    controller.setFitToScreenOnLayout(true, PADDING);
     return controller;
-  }, [controller, selectionAction]);
+  }, [controller, selectionAction, componentFactory]);
 
   return (
     <TopologyView
@@ -221,19 +243,15 @@ export const Korrel8rTopology: React.FC<{
               controller.getGraph().scaleBy(0.75);
             }),
             fitToScreenCallback: action(() => {
-              controller.getGraph().fit(30);
-            }),
-            resetViewCallback: action(() => {
-              controller.getGraph().reset();
-              controller.getGraph().layout();
+              controller.getGraph().fit(PADDING);
             }),
             legend: false,
           })}
         />
       }
     >
-      <VisualizationProvider controller={eventController}>
-        <VisualizationSurface />
+      <VisualizationProvider controller={controller2}>
+        <VisualizationSurface state={{ selectedIds }} />
       </VisualizationProvider>
     </TopologyView>
   );
