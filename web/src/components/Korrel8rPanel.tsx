@@ -139,12 +139,12 @@ export default function Korrel8rPanel() {
     <>
       {t('Query')}
       <FieldLevelHelp header={t('Query')}>
-        <Trans t={t}>
-          <p>
-            Selects the starting point for correlation search. The query is set by the
-            <code>Focus</code> button or you can edit it manually.
-          </p>
-        </Trans>
+        <p>
+          <Trans t={t}>
+            Selects the starting point for correlation search. This query is set automatically by
+            the <code>Focus</code> button. You can edit it manually to specify a custom query.
+          </Trans>
+        </p>
       </FieldLevelHelp>
     </>
   );
