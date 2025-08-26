@@ -12,7 +12,7 @@ const usePopover = () => {
 
   React.useEffect(() => {
     if (launchModal && isOpen) {
-      launchModal?.(Popover, {});
+      launchModal?.(Popover, { title: 'Test modal' }, 'TEST_MODAL_ID');
     }
   }, [launchModal, isOpen]);
 

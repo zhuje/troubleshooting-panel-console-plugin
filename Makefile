@@ -45,6 +45,9 @@ build-backend:
 start-backend:
 	go run ./cmd/plugin-backend.go -port='9002' -config-path='./web/dist' -static-path='./web/dist' -plugin-config-path='ct.yaml'
 
+.PHONY: install
+install: install-frontend install-backend
+
 .PHONY: build-image
 build-image: test-frontend
 	./scripts/build-image.sh
