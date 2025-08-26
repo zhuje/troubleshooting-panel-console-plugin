@@ -216,8 +216,8 @@ export class Domains {
     for (const domain of this.domains.values()) {
       try {
         return domain.linkToQuery(link);
-      } catch (_) {
-        true;
+      } catch {
+        continue;
       }
     }
     throw new TypeError(`cannot convert link: ${link}`);
