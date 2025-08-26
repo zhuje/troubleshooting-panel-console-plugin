@@ -14,8 +14,8 @@ const usePopover = () => {
     if (launchModal && isOpen) {
       launchModal?.(
         Popover,
-        { title: 'troubleshooting-panel-console-plugin-modal' },
-        'id-troubleshooting-panel-console-plugin-modal',
+        { title: 'Troubleshooting panel console plugin modal' },
+        'ID-TROUBLESHOOTING-PANEL-CONSOLE-PLUGIN-MODAL',
       );
     }
   }, [launchModal, isOpen]);
