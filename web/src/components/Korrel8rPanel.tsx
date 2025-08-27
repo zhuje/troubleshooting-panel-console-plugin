@@ -52,10 +52,10 @@ export default function Korrel8rPanel() {
 
   // State
   const alertRules = useSelector((state: State) => state.observe?.get('rules'));
-  const alertIDs = React.useMemo(
-    () => new Map<string, string>(alertRules.map(({ id, name }) => [id, name])),
-    [alertRules],
-  );
+  const alertIDs = React.useMemo(() => {
+    if (!alertRules) return new Map<string, string>();
+    return new Map<string, string>(alertRules.map(({ id, name }) => [id, name]));
+  }, [alertRules]);
   const domains = React.useMemo(
     () => new korrel8r.Domains(...allDomains, new AlertDomain(alertIDs)),
     [alertIDs],

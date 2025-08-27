@@ -35,7 +35,7 @@ export const openTP = () => action(ActionType.OpenTroubleshootingPanel);
 export const setPersistedSearch = (query: Search) =>
   action(ActionType.SetPersistedSearch, { query });
 
-const actions = {
+export const actions = {
   closeTP,
   openTP,
   setPersistedSearch,
