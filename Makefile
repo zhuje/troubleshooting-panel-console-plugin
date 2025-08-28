@@ -31,7 +31,7 @@ start-console:
 
 .PHONY: lint-frontend
 lint-frontend:
-	cd web && npm run lint
+	cd web && npm run lint && npm run lint:tsc
 
 .PHONY: install-backend
 install-backend:
