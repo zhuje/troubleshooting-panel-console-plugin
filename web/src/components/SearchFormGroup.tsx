@@ -3,6 +3,7 @@ import {
   DescriptionListDescription,
   DescriptionListGroup,
   DescriptionListTerm,
+  Flex,
   FormGroup,
   InputGroup,
   InputGroupItem,
@@ -108,8 +109,10 @@ export const SearchFormGroup: React.FC<SearchFormGroupProps> = ({
         {help}
       </>
     >
-      {chooser}
-      {search.type == SearchType.Distance ? distanceInput : goalInput}
+      <Flex>
+        {chooser}
+        {search.type == SearchType.Distance ? distanceInput : goalInput}
+      </Flex>
     </FormGroup>
   );
 };
