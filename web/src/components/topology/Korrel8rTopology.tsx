@@ -153,7 +153,7 @@ export const Korrel8rTopology: React.FC<{
         if (!link) return;
         if (!link.startsWith('/')) link = '/' + link;
         // eslint-disable-next-line no-console
-        console.log(
+        console.debug(
           'korrel8r navigate',
           '\nquery',
           query,
