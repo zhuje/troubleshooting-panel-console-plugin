@@ -29,7 +29,7 @@ it.each([
     },
   },
   {
-    url: 'k8s/ns/default/pods/bad-deployment-000000000-00000',
+    url: 'k8s/ns/default/core~v1~Pod/bad-deployment-000000000-00000',
     query: 'k8s:Pod.v1:{"namespace":"default","name":"bad-deployment-000000000-00000"}',
     constraint: {
       start: null,
