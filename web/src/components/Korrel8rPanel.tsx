@@ -13,6 +13,7 @@ import {
   Form,
   FormGroup,
   TextArea,
+  Title,
   Tooltip,
 } from '@patternfly/react-core';
 import { CubesIcon, ExclamationCircleIcon, SyncIcon } from '@patternfly/react-icons';
@@ -137,15 +138,17 @@ export default function Korrel8rPanel() {
 
   const queryHelp = (
     <>
-      {t('Query')}
-      <FieldLevelHelp header={t('Query')}>
-        <p>
-          <Trans t={t}>
-            Selects the starting point for correlation search. This query is set automatically by
-            the <code>Focus</code> button. You can edit it manually to specify a custom query.
-          </Trans>
-        </p>
-      </FieldLevelHelp>
+      <Title headingLevel="h4">
+        {t('Query')}
+        <FieldLevelHelp header={t('Query')}>
+          <p>
+            <Trans t={t}>
+              Selects the starting point for correlation search. This query is set automatically by
+              the <code>Focus</code> button. You can edit it manually to specify a custom query.
+            </Trans>
+          </p>
+        </FieldLevelHelp>
+      </Title>
     </>
   );
 

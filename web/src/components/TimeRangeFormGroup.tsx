@@ -3,8 +3,13 @@ import {
   DescriptionListDescription,
   DescriptionListGroup,
   DescriptionListTerm,
+  Flex,
+  FlexItem,
   FormGroup,
   NumberInput,
+  Text,
+  TextVariants,
+  Title,
 } from '@patternfly/react-core';
 import * as React from 'react';
 import { TFunction } from 'react-i18next';
@@ -45,22 +50,26 @@ const TimeRangeFormGroup: React.FC<TimeRangeFormGroupProps> = ({
     onChange(new time.Duration(Math.max(1, d), duration.unit));
 
   const recentPicker = (
-    <>
-      Since
-      <NumberInput
-        value={duration.count}
-        min={0}
-        onPlus={() => onChangeDuration(duration.count + 1)}
-        onMinus={() => onChangeDuration(duration.count - 1)}
-        onChange={(e) => onChangeDuration(Number((e.target as HTMLInputElement).value))}
-        widthChars={3}
-      />
-      <TimeUnitPicker
-        unit={duration.unit}
-        onChange={(unit: time.Unit) => onChange(new time.Duration(duration.count, unit))}
-      />
-      ago
-    </>
+    <Flex>
+      <FlexItem>
+        <Text component={TextVariants.h6}> {t('Since')}</Text>
+        <NumberInput
+          value={duration.count}
+          min={0}
+          onPlus={() => onChangeDuration(duration.count + 1)}
+          onMinus={() => onChangeDuration(duration.count - 1)}
+          onChange={(e) => onChangeDuration(Number((e.target as HTMLInputElement).value))}
+          widthChars={3}
+        />
+      </FlexItem>
+      <FlexItem>
+        <Text component={TextVariants.h6}> {t('Ago')}</Text>
+        <TimeUnitPicker
+          unit={duration.unit}
+          onChange={(unit: time.Unit) => onChange(new time.Duration(duration.count, unit))}
+        />
+      </FlexItem>
+    </Flex>
   );
 
   // FXIME allow blank, -toggle.
@@ -103,20 +112,25 @@ const TimeRangeFormGroup: React.FC<TimeRangeFormGroupProps> = ({
 
   return (
     <FormGroup
-      label=<>
-        {label}
-        {help}
-      </>
+      label={
+        <Title headingLevel="h4">
+          {label} {help}
+        </Title>
+      }
     >
-      <Chooser
-        selectedID={type}
-        onChange={(id: string) => onChange(id === RECENT ? duration : range)}
-        items={[
-          { id: RECENT, label: t('Recent') },
-          { id: RANGE, label: t('Range') },
-        ]}
-      />
-      {type === RECENT ? recentPicker : rangePicker}
+      <Flex direction={{ default: 'column' }}>
+        <FlexItem>
+          <Chooser
+            selectedID={type}
+            onChange={(id: string) => onChange(id === RECENT ? duration : range)}
+            items={[
+              { id: RECENT, label: t('Recent') },
+              { id: RANGE, label: t('Range') },
+            ]}
+          />
+        </FlexItem>
+        <FlexItem>{type === RECENT ? recentPicker : rangePicker}</FlexItem>
+      </Flex>
     </FormGroup>
   );
 };

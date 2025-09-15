@@ -3,11 +3,14 @@ import {
   DescriptionListDescription,
   DescriptionListGroup,
   DescriptionListTerm,
+  Flex,
+  FlexItem,
   FormGroup,
   InputGroup,
   InputGroupItem,
   NumberInput,
   TextInput,
+  Title,
 } from '@patternfly/react-core';
 import * as React from 'react';
 import { TFunction } from 'react-i18next';
@@ -103,13 +106,17 @@ export const SearchFormGroup: React.FC<SearchFormGroupProps> = ({
 
   return (
     <FormGroup
-      label=<>
-        {label}
-        {help}
-      </>
+      label={
+        <Title headingLevel="h4">
+          {label}
+          {help}
+        </Title>
+      }
     >
-      {chooser}
-      {search.type == SearchType.Distance ? distanceInput : goalInput}
+      <Flex direction={{ default: 'column' }}>
+        <FlexItem>{chooser}</FlexItem>
+        {search.type == SearchType.Distance ? distanceInput : goalInput}
+      </Flex>
     </FormGroup>
   );
 };
