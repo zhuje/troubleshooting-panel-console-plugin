@@ -12,6 +12,7 @@ import {
   FlexItem,
   Form,
   FormGroup,
+  Spinner,
   TextArea,
   Title,
   Tooltip,
@@ -42,7 +43,6 @@ import './korrel8rpanel.css';
 import { SearchFormGroup } from './SearchFormGroup';
 import TimeRangeFormGroup from './TimeRangeFormGroup';
 import { Korrel8rTopology } from './topology/Korrel8rTopology';
-import { LoadingTopology } from './topology/LoadingTopology';
 
 export default function Korrel8rPanel() {
   const { t } = useTranslation('plugin__troubleshooting-panel-console-plugin');
@@ -156,14 +156,14 @@ export default function Korrel8rPanel() {
     <Tooltip content={locationQuery ? focusTip : cannotFocus}>
       <Button
         isAriaDisabled={!locationQuery}
-        onClick={() =>
+        onClick={() => {
           runSearch({
             ...defaultSearch,
             queryStr: locationQuery?.toString(),
             constraint: searchResult?.search?.constraint,
             period: searchResult?.search?.period,
-          })
-        }
+          });
+        }}
       >
         {t('Focus')}
       </Button>
@@ -185,7 +185,12 @@ export default function Korrel8rPanel() {
 
   const refreshButton = (
     <Tooltip content={t('Refresh the graph using the current settings')}>
-      <Button isAriaDisabled={!search?.queryStr} onClick={() => runSearch(search)}>
+      <Button
+        isAriaDisabled={!search?.queryStr}
+        onClick={() => {
+          runSearch(search);
+        }}
+      >
         <SyncIcon />
       </Button>
     </Tooltip>
@@ -301,18 +306,20 @@ const Topology: React.FC<TopologyProps> = ({ domains, result, t, constraint }) =
   );
 };
 
-const Loading: React.FC = () => (
-  <>
+const Loading: React.FC = () => {
+  const { t } = useTranslation('plugin__troubleshooting-panel-console-plugin');
+  return (
     <div className="tp-plugin__panel-topology-info">
-      <div className={'co-m-loader co-an-fade-in-out tp-plugin__panel-topology-info'}>
-        <div className="co-m-loader-dot__one" />
-        <div className="co-m-loader-dot__two" />
-        <div className="co-m-loader-dot__three" />
-      </div>
+      <EmptyState variant={EmptyStateVariant.sm}>
+        <EmptyStateHeader
+          titleText={t('Loading')}
+          headingLevel="h4"
+          icon={<EmptyStateIcon icon={Spinner} />}
+        />
+      </EmptyState>
     </div>
-    <LoadingTopology />
-  </>
-);
+  );
+};
 
 interface TopologyInfoStateProps {
   titleText: string;
