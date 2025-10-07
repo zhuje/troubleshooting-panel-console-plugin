@@ -1,6 +1,23 @@
 import { LogDomain } from '../korrel8r/log';
 import { Constraint, Query, URIRef } from '../korrel8r/types';
 
+beforeAll(() => {
+  // Mock API pod resource for pod log queries.
+  const resources = {
+    consoleVersion: 'x.y.z',
+    models: [
+      {
+        kind: 'Pod',
+        apiVersion: 'v1',
+        path: 'pods',
+        verbs: ['watch'],
+      },
+    ],
+  };
+  localStorage.setItem('bridge/api-discovery-resources', JSON.stringify(resources));
+  window['SERVER_FLAGS'] = { consoleVersion: 'x.y.z' };
+});
+
 describe('LogDomain.linkToQuery', () => {
   it.each([
     {
@@ -55,27 +72,31 @@ describe('LogDomain.linkToQuery', () => {
 describe('LogDomain.queryToLink', () => {
   it.each([
     {
-      url: `monitoring/logs?q=${encodeURIComponent(
-        '{kubernetes_namespace_name="default",kubernetes_pod_name="foo"}',
-      )}&tenant=infrastructure&start=1742896800000&end=1742940000000`,
+      // LogQL query
       query: `log:infrastructure:{kubernetes_namespace_name="default",kubernetes_pod_name="foo"}`,
       constraint: Constraint.fromAPI({
         start: '2025-03-25T10:00:00.000Z',
         end: '2025-03-25T22:00:00.000Z',
       }),
+      url: new URIRef(`monitoring/logs`, {
+        q: '{kubernetes_namespace_name="default",kubernetes_pod_name="foo"}',
+        tenant: 'infrastructure',
+        start: 1742896800000,
+        end: 1742940000000,
+      }),
     },
     {
-      url: `monitoring/logs?q=${encodeURIComponent(
-        '{kubernetes_namespace_name="default",log_type="infrastructure"}',
-      )}&tenant=infrastructure&start=1742896800000&end=1742940000000`,
-      query: 'log:infrastructure:{kubernetes_namespace_name="default",log_type="infrastructure"}',
+      // k8s Pod query
+      query: 'log:infrastructure:{"namespace":"default","name":"foo"}',
       constraint: Constraint.fromAPI({
         start: '2025-03-25T10:00:00.000Z',
         end: '2025-03-25T22:00:00.000Z',
       }),
+
+      url: new URIRef('k8s/ns/default/core~v1~Pod/foo/aggregated-logs'),
     },
   ])('$query', ({ url, query, constraint }) =>
-    expect(new LogDomain().queryToLink(Query.parse(query), constraint)).toEqual(new URIRef(url)),
+    expect(new LogDomain().queryToLink(Query.parse(query), constraint)).toEqual(url),
   );
 });
 

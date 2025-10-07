@@ -1,4 +1,5 @@
-import { Class, Constraint, Domain, Query, unixMilliseconds, URIRef } from './types';
+import { K8sDomain } from './k8s';
+import { Class, Constraint, Domain, joinPath, Query, unixMilliseconds, URIRef } from './types';
 
 enum LogClass {
   application = 'application',
@@ -6,9 +7,16 @@ enum LogClass {
   audit = 'audit',
 }
 
+// TODO: Aggregated log links and k8s:pod style log queries ignore the containers parameter.
+
 export class LogDomain extends Domain {
+  private k8s: K8sDomain;
+  private pod: Class;
+
   constructor() {
     super('log');
+    this.k8s = new K8sDomain();
+    this.pod = new Class('k8s', 'Pod');
   }
 
   class(name: string): Class {
@@ -16,7 +24,7 @@ export class LogDomain extends Domain {
     return new Class(this.name, name);
   }
 
-  // There are 2 types of URL: pod logs, and log search.
+  // There are 2 types of URL: pod logs, and logQL searches.
   linkToQuery(link: URIRef): Query {
     // First check for aggregated pod logs URL
     const [, namespace, name] =
@@ -42,11 +50,19 @@ export class LogDomain extends Domain {
   queryToLink(query: Query, constraint?: Constraint): URIRef {
     const logClass = LogClass[query.class.name as keyof typeof LogClass];
     if (!logClass) throw this.badQuery(query, 'unknown class');
-    return new URIRef('monitoring/logs', {
-      q: query.selector,
-      tenant: logClass,
-      start: unixMilliseconds(constraint?.start),
-      end: unixMilliseconds(constraint?.end),
-    });
+    try {
+      // First try to parse the selector as k8s pod selector
+      const link = this.k8s.queryToLink(this.pod.query(query.selector));
+      link.pathname = joinPath(link.pathname, 'aggregated-logs');
+      return link;
+    } catch {
+      // Otherwise assume it is a LogQL query.
+      return new URIRef('monitoring/logs', {
+        q: query.selector,
+        tenant: logClass,
+        start: unixMilliseconds(constraint?.start),
+        end: unixMilliseconds(constraint?.end),
+      });
+    }
   }
 }

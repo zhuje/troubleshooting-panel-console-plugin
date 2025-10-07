@@ -170,6 +170,12 @@ export class URIRef {
   }
 }
 
+// Join and normalize paths, no leading, trailing or repeated '/' charactersa
+export const joinPath = (path0: string, ...paths: string[]): string => {
+  const clean = paths.map((path: string) => path.replaceAll(/(^\/*)|(\/*$)/g, ''));
+  return [path0.replace(/\/*$/, ''), ...clean].join('/');
+};
+
 // Encode an object as a comma-separated, key=value list: 'key=value,key=value...'. No URI encoding.
 export const keyValueList = (obj: { [key: string]: string }): string => {
   return Object.keys(obj || {})
