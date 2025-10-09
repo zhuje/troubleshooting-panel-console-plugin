@@ -49,14 +49,14 @@ start-backend:
 install: install-frontend install-backend
 
 .PHONY: build-image
-build-image: test-frontend
+build-image: build-frontend test-frontend
 	./scripts/build-image.sh
 
 .PHONY: start-forward
 start-forward:
 	./scripts/start-forward.sh
 
-export REGISTRY_ORG?=openshift-observability-ui
+export REGISTRY_ORG?=	openshift-observability-ui
 export TAG?=latest
 IMAGE=quay.io/${REGISTRY_ORG}/troubleshooting-panel-console-plugin:${TAG}
 

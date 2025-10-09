@@ -10,6 +10,7 @@ import {
   Node,
   Query,
   URIRef,
+  joinPath,
 } from '../korrel8r/types';
 
 describe('Query', () => {
@@ -183,4 +184,47 @@ describe('Graph', () => {
   g.nodes.forEach((n) => expect(g.node(n.id)).toEqual(n)); // Lookup nodes
   expect(g.nodes).toEqual(a.nodes.map((n) => new Node(n)));
   expect(g.edges).toEqual(a.edges.map((e) => new Edge(g.node(e.start), g.node(e.goal))));
+});
+
+describe('joinPath', () => {
+  it.each([
+    // Basic path joining
+    ['path1', 'path2', 'path1/path2'],
+    ['path1', 'path2', 'path3', 'path1/path2/path3'],
+
+    // Handling trailing slash on first path
+    ['path1/', 'path2', 'path1/path2'],
+    ['path1//', 'path2', 'path1/path2'],
+
+    // Handling leading slashes on subsequent paths
+    ['path1', '/path2', 'path1/path2'],
+    ['path1', '//path2', 'path1/path2'],
+
+    // Handling trailing slashes on subsequent paths
+    ['path1', 'path2/', 'path1/path2'],
+    ['path1', 'path2//', 'path1/path2'],
+
+    // Complex combinations
+    ['path1/', '/path2/', '/path3/', 'path1/path2/path3'],
+    ['/path1/', '//path2//', '///path3///', '/path1/path2/path3'],
+
+    // Empty paths
+    ['', 'path2', '/path2'],
+    ['path1', '', 'path1/'],
+    ['', '', '/'],
+
+    // Single path
+    ['single', 'single'],
+    ['single/', 'single'],
+    ['/single/', '/single'],
+
+    // Absolute paths
+    ['/absolute', 'relative', '/absolute/relative'],
+    ['/absolute/', '/relative/', '/absolute/relative'],
+  ] as Array<string[]>)('joins paths correctly: %s', (...args: string[]) => {
+    const expected = args.pop() as string;
+    const paths = args as string[];
+    const [first, ...rest] = paths;
+    expect(joinPath(first, ...rest)).toEqual(expected);
+  });
 });
