@@ -51,7 +51,6 @@ export default function Korrel8rPanel() {
   });
   const dispatch = useDispatch();
 
-  // State
   const alertRules = useSelector((state: State) => state.observe?.get('rules'));
   const alertIDs = React.useMemo(() => {
     if (!alertRules) return new Map<string, string>();
@@ -62,26 +61,19 @@ export default function Korrel8rPanel() {
     [alertIDs],
   );
   const locationQuery = useLocationQuery(domains);
+
+  // Search parameters.
   const [search, setSearch] = React.useState<Search>({
     ...defaultSearch, // Default search parameters.
-    queryStr: locationQuery?.toString(), // Default query string.
+    queryStr: locationQuery?.toString(), // Default query string from location.
     ...searchResult?.search, // Use persisted search if available.
   });
+  // Search result
   const [result, setResult] = React.useState<Result | null>(searchResult?.result ?? null);
+  // Showing advanced query
   const [showQuery, setShowQuery] = React.useState(false);
 
-  const focusTip = t('Create a graph of correlated items from resources in the current view.');
-  const cannotFocus = t('The current view does not support correlation.');
-
   React.useEffect(() => {
-    // Set result = null to trigger a new client request, don't run the query till then.
-    if (result !== null) {
-      return;
-    }
-    if (!search?.queryStr && !locationQuery) {
-      setResult({ message: cannotFocus });
-      return;
-    }
     // eslint-disable-next-line no-console
     console.debug('korrel8r search', search);
     const queryStr = search?.queryStr?.trim();
@@ -89,52 +81,47 @@ export default function Korrel8rPanel() {
       queries: queryStr ? [queryStr] : undefined,
       constraint: search?.constraint?.toAPI() ?? undefined,
     };
-    const cancellableFetch =
+    let cancelled = false; // Detect if returned cleanup function was called.
+    const onResult = (newResult: Result) => {
+      if (!cancelled) {
+        setResult(newResult);
+        dispatch(setPersistedSearch({ search, result: newResult }));
+      }
+      // eslint-disable-next-line no-console
+      console.debug('korrel8r result', newResult, 'cancelled', cancelled);
+    };
+    const fetch =
       search.type === SearchType.Goal
         ? getGoalsGraph({ start, goals: [search.goal] })
         : getNeighborsGraph({ start, depth: search.depth });
-
-    cancellableFetch
-      .then((response: api.Graph) => {
-        const result: Result = { graph: new korrel8r.Graph(response) };
-        // eslint-disable-next-line no-console
-        console.debug('korrel8r result', result);
-        setResult(result);
-        dispatch(setPersistedSearch({ search, result }));
-      })
+    fetch
+      .then((response: api.Graph) => onResult({ graph: new korrel8r.Graph(response) }))
       .catch((e: api.ApiError) => {
-        const result = {
-          message: e.body?.error || e.message || 'Unknown Error',
+        onResult({
           title: e?.body?.error ? t('Korrel8r Error') : t('Request Failed'),
-        };
-        // eslint-disable-next-line no-console
-        console.debug('korrel8r result', result);
-        setResult(result);
-        dispatch(setPersistedSearch({ search, result }));
+          message: e?.body?.error || e.message || 'Unknown Error',
+        });
       });
-    return () => cancellableFetch.cancel();
-  }, [result, t, dispatch, search, cannotFocus, locationQuery]);
+    return () => {
+      cancelled = true;
+      fetch.cancel();
+    };
+  }, [search, t, dispatch]);
 
   const queryToggleID = 'query-toggle';
   const queryContentID = 'query-content';
   const queryInputID = 'query-input';
 
-  const depthBounds = applyBounds(1, 10);
-
-  const runSearch = React.useCallback(
-    (newSearch: Search) => {
-      // Update constraint from time period
-      if (newSearch.period) {
-        const [start, end] = newSearch.period.startEnd();
-        newSearch.constraint = new korrel8r.Constraint({ ...newSearch.constraint, start, end });
-      }
-      newSearch.depth = depthBounds(newSearch.depth);
-      newSearch.type = !newSearch.goal ? SearchType.Distance : newSearch.type;
-      setSearch(newSearch);
-      setResult(null);
-    },
-    [setResult, depthBounds],
-  );
+  const runSearch = React.useCallback((newSearch: Search) => {
+    // Update constraint from time period
+    if (newSearch.period) {
+      const [start, end] = newSearch.period.startEnd();
+      newSearch.constraint = new korrel8r.Constraint({ ...newSearch.constraint, start, end });
+    }
+    newSearch.depth = Math.max(1, Math.min(newSearch.depth, 10));
+    setSearch({ ...newSearch }); // Create a new search object to trigger useEffect
+    setResult(null);
+  }, []);
 
   const queryHelp = (
     <>
@@ -153,7 +140,13 @@ export default function Korrel8rPanel() {
   );
 
   const focusButton = (
-    <Tooltip content={locationQuery ? focusTip : cannotFocus}>
+    <Tooltip
+      content={
+        locationQuery
+          ? t('Create a graph of items correlated from resources in the current page.')
+          : t('The current page does not support correlation.')
+      }
+    >
       <Button
         isAriaDisabled={!locationQuery}
         onClick={() => {
@@ -345,8 +338,4 @@ const TopologyInfoState: React.FC<TopologyInfoStateProps> = ({ titleText, text, 
       </EmptyState>
     </div>
   );
-};
-
-const applyBounds = (min: number, max: number) => {
-  return (val: number) => Math.max(min, Math.min(val, max));
 };
