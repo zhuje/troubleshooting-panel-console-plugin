@@ -1,5 +1,4 @@
-import { K8sDomain } from './k8s';
-import { Class, Constraint, Domain, joinPath, Query, unixMilliseconds, URIRef } from './types';
+import { Class, Constraint, Domain, Query, unixMilliseconds, URIRef } from './types';
 
 enum LogClass {
   application = 'application',
@@ -10,13 +9,8 @@ enum LogClass {
 // TODO: Aggregated log links and k8s:pod style log queries ignore the containers parameter.
 
 export class LogDomain extends Domain {
-  private k8s: K8sDomain;
-  private pod: Class;
-
   constructor() {
     super('log');
-    this.k8s = new K8sDomain();
-    this.pod = new Class('k8s', 'Pod');
   }
 
   class(name: string): Class {
@@ -50,19 +44,35 @@ export class LogDomain extends Domain {
   queryToLink(query: Query, constraint?: Constraint): URIRef {
     const logClass = LogClass[query.class.name as keyof typeof LogClass];
     if (!logClass) throw this.badQuery(query, 'unknown class');
-    try {
-      // First try to parse the selector as k8s pod selector
-      const link = this.k8s.queryToLink(this.pod.query(query.selector));
-      link.pathname = joinPath(link.pathname, 'aggregated-logs');
-      return link;
-    } catch {
-      // Otherwise assume it is a LogQL query.
-      return new URIRef('monitoring/logs', {
-        q: query.selector,
-        tenant: logClass,
-        start: unixMilliseconds(constraint?.start),
-        end: unixMilliseconds(constraint?.end),
-      });
-    }
+    return new URIRef('monitoring/logs', {
+      // Try to translate as a direct pod selector, otherwise use as logQL query
+      q: directToLogQL(query.selector) || query.selector,
+      tenant: logClass,
+      start: unixMilliseconds(constraint?.start),
+      end: unixMilliseconds(constraint?.end),
+    });
   }
 }
+
+const directToLogQL = (maybeDirect: string): string | undefined => {
+  try {
+    // Try to parse the selector as k8s pod selector, and translate to logQL.
+    const direct = JSON.parse(maybeDirect);
+    if (!direct || typeof direct !== 'object') return undefined;
+    const streams = [
+      direct?.namespace && `kubernetes_namespace_name="${direct.namespace}"`,
+      direct?.name && `kubernetes_pod_name="${direct.name}"`,
+    ]
+      .filter((x) => x)
+      .join(',');
+    const pipeline =
+      direct?.labels && typeof direct.labels === 'object'
+        ? Object.entries(direct.labels)
+            .map(([k, v]) => `|kubernetes_labels_${k}="${v}"`)
+            .join('')
+        : '';
+    return `{${streams}}${pipeline ? '|json' + pipeline : ''}`;
+  } catch {
+    return undefined;
+  }
+};
