@@ -11,7 +11,7 @@ type Model = {
 };
 
 // Parsed form of a k8s query selector.
-type Selector = {
+export type Selector = {
   name?: string;
   namespace?: string;
   labels?: { [key: string]: string };

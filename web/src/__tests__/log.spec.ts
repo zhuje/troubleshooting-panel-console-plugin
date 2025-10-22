@@ -74,30 +74,56 @@ describe('LogDomain.queryToLink', () => {
     {
       // LogQL query
       query: `log:infrastructure:{kubernetes_namespace_name="default",kubernetes_pod_name="foo"}`,
-      constraint: Constraint.fromAPI({
-        start: '2025-03-25T10:00:00.000Z',
-        end: '2025-03-25T22:00:00.000Z',
-      }),
-      url: new URIRef(`monitoring/logs`, {
-        q: '{kubernetes_namespace_name="default",kubernetes_pod_name="foo"}',
-        tenant: 'infrastructure',
-        start: 1742896800000,
-        end: 1742940000000,
-      }),
+      q: '{kubernetes_namespace_name="default",kubernetes_pod_name="foo"}',
+      tenant: 'infrastructure',
     },
     {
       // k8s Pod query
       query: 'log:infrastructure:{"namespace":"default","name":"foo"}',
-      constraint: Constraint.fromAPI({
+      q: '{kubernetes_namespace_name="default",kubernetes_pod_name="foo"}',
+      tenant: 'infrastructure',
+    },
+    {
+      // k8s Pod query with labels
+      query: 'log:infrastructure:{"namespace":"default","name":"foo","labels":{"a":"b","c":"d"}}',
+      q: '{kubernetes_namespace_name="default",kubernetes_pod_name="foo"}|json|kubernetes_labels_a="b"|kubernetes_labels_c="d"',
+      tenant: 'infrastructure',
+    },
+    {
+      // k8s partial query
+      query: 'log:infrastructure:{"namespace":"default","labels":{}}',
+      q: '{kubernetes_namespace_name="default"}',
+      tenant: 'infrastructure',
+    },
+    {
+      // k8s partial query
+      query:
+        'log:infrastructure:{"namespace":"openshift-monitoring","labels":{"app":"cluster-monitoring-operator"}}',
+      q: '{kubernetes_namespace_name="openshift-monitoring"}|json|kubernetes_labels_app="cluster-monitoring-operator"',
+      tenant: 'infrastructure',
+    },
+
+    {
+      query: 'log:application:{}',
+      q: '{}',
+      tenant: 'application',
+    },
+  ])('$query', ({ query, q, tenant }) => {
+    const got = new LogDomain().queryToLink(
+      Query.parse(query),
+      Constraint.fromAPI({
         start: '2025-03-25T10:00:00.000Z',
         end: '2025-03-25T22:00:00.000Z',
       }),
-
-      url: new URIRef('k8s/ns/default/core~v1~Pod/foo/aggregated-logs'),
-    },
-  ])('$query', ({ url, query, constraint }) =>
-    expect(new LogDomain().queryToLink(Query.parse(query), constraint)).toEqual(url),
-  );
+    );
+    const want = new URIRef('monitoring/logs', {
+      q,
+      tenant,
+      start: 1742896800000,
+      end: 1742940000000,
+    });
+    expect(got.toString()).toEqual(want.toString());
+  });
 });
 
 describe('expected errors', () => {
