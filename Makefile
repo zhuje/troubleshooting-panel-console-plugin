@@ -1,3 +1,9 @@
+
+VERSION     ?= latest
+PLATFORMS   ?= linux/arm64,linux/amd64
+ORG         ?= openshift-observability-ui
+IMAGE       ?= quay.io/${ORG}/troubleshooting-panel-console-plugin:${VERSION}
+
 .PHONY: test
 test: test-frontend
 
@@ -56,15 +62,11 @@ build-image: build-frontend test-frontend
 start-forward:
 	./scripts/start-forward.sh
 
-export REGISTRY_ORG?=	openshift-observability-ui
-export TAG?=latest
-IMAGE=quay.io/${REGISTRY_ORG}/troubleshooting-panel-console-plugin:${TAG}
-
 .PHONY: deploy
 deploy:	test-frontend		## Build and push image, reinstall on cluster using helm.
 	helm uninstall troubleshooting-panel-console-plugin -n troubleshooting-panel-console-plugin || true
 	PUSH=1 scripts/build-image.sh
-	helm install troubleshooting-panel-console-plugin charts/openshift-console-plugin -n troubleshooting-panel-console-plugin --create-namespace --set plugin.image=$(IMAGE)
+	helm install troubleshooting-panel-console-plugin charts/openshift-console-plugin -n troubleshooting-panel-console-plugin --create-namespace --set plugin.image=${IMAGE}
 
 .PHONY: start-devspace-backend
 start-devspace-backend:
@@ -77,3 +79,9 @@ gen-client: web/src/korrel8r/client
 web/src/korrel8r/client: korrel8r/swagger.json
 	cd web && npx openapi-typescript-codegen --indent 2 --input ../$< --output ../$@ --name Korrel8rClient
 	@touch $@
+
+.PHONY: podman-cross-build
+podman-cross-build:
+	podman manifest create -a ${IMAGE}
+	podman build --platform=${PLATFORMS} --manifest ${IMAGE} -f Dockerfile.dev
+	podman manifest push ${IMAGE}
